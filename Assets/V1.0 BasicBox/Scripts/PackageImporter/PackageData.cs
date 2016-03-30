@@ -29,6 +29,7 @@ public class PanelData
     /// Grid_Y Value
     /// </summary>
     public int Row { set; get; }
+
     /// <summary>
     /// Grid_x Value
     /// </summary>
@@ -40,9 +41,8 @@ public class PanelData
     public float Top { set; get; }
     public float Bottom { set; get; }
 
-    public List<int> Indices { set; get; }
+    public List<SerializableVector3> Vertices { set; get; }
     
-
 }
 
 [Serializable]
