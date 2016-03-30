@@ -10,9 +10,7 @@
         public string Name { set; get; }
         
         public bool IsOnBoundary { set; get; }
-
-        //public Rigidbody Rigidbody { set; get; }
-
+        
         public GameObject UnityObject { set; get; }
 
         private Vector3 _position = Vector3.zero;
@@ -88,7 +86,7 @@
 
         public override string ToString()
         {
-            return Name;
+            return Name +" - " +  Position.ToString();
         }
 
         #region Equatable

@@ -213,6 +213,16 @@
             }
         }
 
+        public Point2D OtherPoint(Point2D one)
+        {
+
+            if (Points[0] == one)
+                return Points[1];
+            if (Points[1] == one)
+                return Points[0];
+            return null;
+
+        }
         #endregion
 
     }

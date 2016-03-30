@@ -168,5 +168,156 @@
                 }
             }
         }
+
+        public Point2D TopRightPoint
+        {
+            get
+            {
+                var result = AllPoints.First();
+
+                foreach(var p in AllPoints)
+                {
+                    if((p.Position.x > result.Position.x) || (p.Position.x == result.Position.x && p.Position.y > result.Position.y))
+                    {
+                        result = p;
+                    }
+
+                }
+
+                //Debug.Log("Top Left Point index : " + AllPoints.IndexOf(result));
+                
+                return result;
+            }
+        }
+
+        public List<Point2D> Outline
+        {
+            get
+            {
+                
+                
+                List<Point2D> result = new List<Point2D>();
+                
+                var current = TopRightPoint;
+                Point2D next = null;
+                Point2D Pre = null;
+
+                int i = 0;
+                while( i < 10)
+                {
+                   
+                    
+                    result.Add(current);
+
+                    next = Next(current, Pre);
+                    Pre = current;
+                    current = next;
+                    i++;
+                }
+                return result;
+            }
+        }
+
+        public Point2D Next(Point2D current, Point2D pre = null)
+        {
+            float minAngle = float.MaxValue;
+            Point2D result = current;
+
+            foreach (var e in AllEdges.Where(edge => edge.Points.Contains(current)).Where(edge => !edge.IsMatchFor(current, pre)))
+            {
+                /*if (pre != null && e.Points.Contains(pre))
+                    continue;*/
+
+                var dir = e.OtherPoint(current).Position - current.Position;
+                
+                /*ar sign = Math.Sign(CGAlgorithm.Perp(dir, Vector2.right));
+                var angle = Vector3.Angle( dir, Vector3.right);*/
+
+                var tan2 = Mathf.Atan2(dir.x, dir.y);
+                if (tan2 < 0) tan2 += 2 * Mathf.PI;
+                //tan2 *= 180 / Mathf.PI;
+
+                if (tan2 < minAngle)
+                {
+                    minAngle = tan2;
+                    result = e.OtherPoint(current);
+                }
+
+            }
+            return result;
+        }
+
+        public void UnitTest()
+        {
+            /*foreach(var p in AllPoints)
+            {
+                foreach (var e in p.Edges)
+                {
+                    Debug.Log(string.Format("{0} to {1} is {2}", p, e.OtherPoint(p), e));
+                }
+            }*/
+
+            /*foreach(var pt in Outline)
+            {
+                Debug.Log(pt);
+            }
+
+            LogPointEdges(AllPoints[13]);
+
+            LogPointEdges(AllPoints[12]);*/
+
+            LogOutline();
+
+        }
+
+        public void LogPointEdges(Point2D point)
+        {
+            foreach (var e in AllEdges.Where(edge => edge.Points.Contains(point)))
+            {
+
+                var dir = e.OtherPoint(point).Position - point.Position;
+                var angle = Vector3.Angle(Vector3.right, dir);
+                var dotValue = Vector3.Dot(Vector3.right, dir);
+                var Perp = CGAlgorithm.Perp(Vector3.right, dir);
+                var tan2 = Mathf.Atan2( dir.y, dir.x);
+                if (tan2 < 0) tan2 += 2 * Mathf.PI;
+                tan2 *= 180 / Mathf.PI;
+                Debug.Log(string.Format("{0} to {1} 'angle is {2}, Perp is {3}, Dot is {4}, Tan2 is {5}",
+                    point, e.OtherPoint(point), angle, Perp, dotValue, tan2));
+            }
+        }
+
+        public void LogOutline()
+        {
+
+            var edges = AllEdges.Where(edge => edge.Faces.Count == 1).ToList();
+            
+            List<Point2D> result = new List<Point2D>();
+
+            /*var current = edges[0].Points[0];
+            var next = edges[0].Points[1];*/
+
+            var rightMostEdge = edges.Find(e => e.Points[0] == TopRightPoint);
+            Debug.Log(rightMostEdge);
+
+            var current = rightMostEdge.Points[0];
+            var next = rightMostEdge.Points[1];
+
+            result.Add(current);
+
+            while (next != current)
+            {
+
+                result.Add(next);
+
+                var edge = edges.Find(e => e.Points[0] == next);
+                next = edge.Points[1];
+                
+            }
+
+            foreach (var p in result)
+                Debug.Log(p);
+            
+        }
     }
 }
