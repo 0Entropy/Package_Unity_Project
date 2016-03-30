@@ -16,6 +16,7 @@
         {
             if (p1 == p2)
             {
+                Debug.Log("There is two same edge!!");
                 throw new InvalidOperationException("Edge must be between two different points!");
             }
             //ConnectJoint(p1, p2);

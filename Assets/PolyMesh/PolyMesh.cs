@@ -197,6 +197,7 @@ public static class Bezier
 	{
 		return from * (1 - t) * (1 - t) + control * 2 * (1 - t) * t + to * t * t;
 	}
+
 	public static Vector3 Curve(Vector3 from, Vector3 control, Vector3 to, float t)
 	{
 		from.x = Curve(from.x, control.x, to.x, t);

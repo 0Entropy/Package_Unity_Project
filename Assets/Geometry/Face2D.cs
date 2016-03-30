@@ -14,17 +14,17 @@
         public string Name { set; get; }
 
         public Shape2D Shape { set; get; }
-        public List<Edge2D> BasicEdges { get; set; }
+        public List<Edge2D> Edges { get; set; }
 
         //Basic points can be always called from a lazy method.
-        public List<Point2D> BasicPoints { get { return _lazyBasicPoints.Value; } }//return GetBasiclPointsInWindingOrder(); } }//
+        public List<Point2D> BasicPoints { get { return GetBasiclPointsInWindingOrder(); } }//return GetBasiclPointsInWindingOrder(); } }//
 
         public List<Point2D> ActualPoints { get { return GetActualPointsInWindingOrder(); } }// _lazyActualPoints.Value; } }
 
         public Face2D(params Edge2D[] edges)
         {
-            BasicEdges = new List<Edge2D>(edges);
-            BasicEdges.ForEach(e => e.AddFaces(this));
+            Edges = new List<Edge2D>(edges);
+            Edges.ForEach(e => e.AddFaces(this));
             _lazyBasicPoints = new _Lazy<List<Point2D>>(GetBasiclPointsInWindingOrder);
             _lazyActualPoints = new _Lazy<List<Point2D>>(GetActualPointsInWindingOrder);
         }
@@ -36,9 +36,9 @@
             // The edges were added in order, but we don't know if the points within the edges are in order. 
             // Therefore we look at the previous edge to figoure out which point has already been visited
 
-            Edge2D previous = BasicEdges.First();
+            Edge2D previous = Edges.First();
             
-            foreach (var current in BasicEdges.Skip(1).Take(BasicEdges.Count - 2))
+            foreach (var current in Edges.Skip(1).Take(Edges.Count - 2))
             {
                 if (points.Count == 0)
                 {
@@ -64,11 +64,11 @@
         {
             List<Point2D> points = new List<Point2D>();
 
-            Edge2D first = BasicEdges.First();
-            Edge2D last = BasicEdges.Last();
+            Edge2D first = Edges.First();
+            Edge2D last = Edges.Last();
             Point2D firstPoint = first.PointInBoth(last);
             points.Add(firstPoint);
-            foreach (var currect in BasicEdges)//.Skip(1).Take(BasicEdges.Count - 2))
+            foreach (var currect in Edges)//.Skip(1).Take(BasicEdges.Count - 2))
             {
                 currect.AddAllMiddlePoints(points);
 
@@ -87,11 +87,11 @@
         {
             List<Point2D> points = new List<Point2D>();
 
-            Edge2D first = BasicEdges.First();
-            Edge2D last = BasicEdges.Last();
+            Edge2D first = Edges.First();
+            Edge2D last = Edges.Last();
             Point2D firstPoint = first.PointInBoth(last);
             points.Add(firstPoint);
-            foreach (var currect in BasicEdges)//.Skip(1).Take(BasicEdges.Count - 2))
+            foreach (var currect in Edges)//.Skip(1).Take(BasicEdges.Count - 2))
             {
                 //currect.OnDivide();
                 points.Add(currect.OnDivide());
@@ -127,7 +127,7 @@
 
         public bool IsMatchFor(Face2D face)
         {
-            return face.BasicEdges.All(e => BasicEdges.Contains(e));
+            return face.Edges.All(e => Edges.Contains(e));
         }
 
         public bool IsOver(Vector3 pt)
@@ -162,7 +162,7 @@
             Scale = scale;
             foreach (var p in ActualPoints)
                 p.AddRigidbody();
-            foreach (var e in BasicEdges)
+            foreach (var e in Edges)
                 e.AddSpringJoint(Scale);
         }
         
@@ -325,7 +325,7 @@
             CenterPoint.DestroySelf();
             CenterPoint = null;
 
-            foreach (var e in BasicEdges)
+            foreach (var e in Edges)
             {
                 e.DivisionCount--;
                 if(e.DivisionCount == 0)
@@ -429,7 +429,7 @@
         {
             StringBuilder sb = new StringBuilder(Name + " BasicEdges : \n");
             int ei = 0;
-            foreach (var e in BasicEdges)
+            foreach (var e in Edges)
             {
                 List<Point2D> points = e.GetActualPoints();
                 sb.Append(ei + " : ");

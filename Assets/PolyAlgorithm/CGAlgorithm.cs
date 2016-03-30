@@ -373,8 +373,10 @@ of a point in an arbitrary polygon.
 	}
 	
   //public static int Intersect2D_2Segments( Segment2D S1, Segment2D S2, Vector2 I0, Vector2 I1 ) {
-	public static int Intersect2D_2Segments( Vector2 P0, Vector2 P1, Vector2 P2, Vector2 P3, Vector2 I0, Vector2 I1 ) {
-		Vector2   u = P1 - P0;
+	public static int Intersect2D_2Segments( Vector2 P0, Vector2 P1, Vector2 P2, Vector2 P3, out Vector2 I0, out Vector2 I1 ) {
+        I0 = P1;
+        I1 = P2;
+        Vector2   u = P1 - P0;
 	    Vector2   v = P3 - P2;
 	    Vector2   w = P0 - P2;
 	    float     D = Perp(u,v);
@@ -564,6 +566,11 @@ of a point in an arbitrary polygon.
 	    Vector2   v = P3 - P2;
 	    Vector2   w = P0 - P2;
 	    float     D = Perp(u, v);
+
+        if(Mathf.Abs(D) < SMALL_NUM)
+        {
+
+        }
 	
 	    // the segments are skew and may intersect in a point
 	    // get the intersect parameter for P0-P1
@@ -1093,6 +1100,8 @@ of a point in an arbitrary polygon.
 		
 		Vector2 P0, P1, P2, P3;
 		Vector2 skewPoint = Vector2.zero;
+
+        Vector2 I0, I1;
 		
 		for(int i = 0; i < n; i++) {
 			P0 = Poly[PreIndex(i, n)];
@@ -1100,8 +1109,8 @@ of a point in an arbitrary polygon.
 			P3 = Poly[NextIndex(i, n)];
 			TranslateSegment(ref P0, ref P1, Spacing);
 			TranslateSegment(ref P2, ref P3, Spacing);
-			if(Intersect2D_2SkewSegments(P0, P1, P2, P3, ref skewPoint)){
-				scaledPoly.Add(skewPoint);
+			if(Intersect2D_2Segments(P0, P1, P2, P3, out I0, out I1) > 0){
+				scaledPoly.Add(I0);
 			}else{
 				scaledPoly.Add(P1);
 				scaledPoly.Add(P2);

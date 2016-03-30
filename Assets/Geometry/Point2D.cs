@@ -126,7 +126,7 @@
             if (other == null || this == null)
                 return false;
 
-            bool isEquals = !((UnityObject) ^ (other.UnityObject));
+            /*bool isEquals = !((UnityObject) ^ (other.UnityObject));
 
             if (!isEquals)
                 return false;
@@ -134,7 +134,7 @@
             if(UnityObject && other.UnityObject)
             {
                 return UnityObject == other.UnityObject;
-            }
+            }*/
 
             return Position == other.Position;
             
@@ -144,7 +144,7 @@
         {
             if (UnityObject)
                 return Position.GetHashCode() ^ UnityObject.GetHashCode();
-            return Position.GetHashCode() ^ Name.GetHashCode();
+            return Position.GetHashCode();// ^ Name.GetHashCode();
         }
         #endregion
 

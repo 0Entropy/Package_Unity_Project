@@ -94,7 +94,7 @@ public class Border_2D : MonoBehaviour {
         Face2D face = Shape.AddPoints(vertexs.Select(v => v.Point).ToArray());
         face.Name = "BorderFace";
 
-        foreach(var e in face.BasicEdges)
+        foreach(var e in face.Edges)
         {
             _Block block = blockPrefab.Spawn();
             block.transform.SetParent(transform);
