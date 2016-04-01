@@ -23,12 +23,12 @@ public class PackageEditor : Editor
         if (GUILayout.Button("Reset"))
         {
 
-            Debug.Log(imPackage.Shape);
+            Debug.Log(ImPackage.Shape);
 
 
             isFirst = false;
 
-            var shape = imPackage.Shape;
+            var shape = ImPackage.Shape;
 
             DrawKeyPoints();
             
@@ -38,7 +38,7 @@ public class PackageEditor : Editor
         if (dimensionSettings = EditorGUILayout.Foldout(dimensionSettings, "Dimension (mm)"))
         {
             var dimension = string.Format("Length : {0}, Width : {1}, Depth : {2}, Thickness : {3}",
-                imPackage.Length, imPackage.Width, imPackage.Depth, imPackage.Thickness);
+                ImPackage.Length, ImPackage.Width, ImPackage.Depth, ImPackage.Thickness);
 
             var whatever = EditorGUILayout.TextArea(dimension);
             var whatever_0 = EditorGUILayout.TextField(whatever);
@@ -58,13 +58,16 @@ public class PackageEditor : Editor
         //Debug.Log("Package Outline Point count : " + imPackage.Shape.OutlinePoints.Count);
 
         //Load handle matrix
-        Handles.matrix = imPackage.transform.localToWorldMatrix;
+        Handles.matrix = ImPackage.transform.localToWorldMatrix;
 
         Handles.color = Color.white;
 
         //DrawKeyPoints();
 
-        DrawLine(imPackage.Shape.OutlinePoints.Select(p=>(Vector2)p.Position), Color.red, 5);
+        DrawLine(ImPackage.Outline, new Color(0, 0.5f, 0.8f));
+
+        DrawLine(ImPackage.Bleedline, new Color(0.0f, 0.4f, 0.6f));
+
 
         //DrawBleedLine();
 
@@ -80,7 +83,7 @@ public class PackageEditor : Editor
 
     }
 
-    PackageImporter imPackage
+    PackageImporter ImPackage
     {
         get { return (PackageImporter)target; }
     }
@@ -95,7 +98,7 @@ public class PackageEditor : Editor
     void DrawKeyPoints()
     {
         int i = 0;
-        foreach (var p in imPackage.Shape.Points)
+        foreach (var p in ImPackage.Shape.Points)
         {
             //Handles.DotCap(0, p, Quaternion.identity, HandleUtility.GetHandleSize(p) * 0.03f);
             Handles.Label(p.Position, "" + i++);
@@ -107,7 +110,7 @@ public class PackageEditor : Editor
     void DrawBleedLine()
     {
 
-        var outline = imPackage.Shape.OutlinePoints.Select(p => (Vector2)p.Position).ToList();
+        var outline = ImPackage.Shape.OutlinePoints.Select(p => (Vector2)p.Position).ToList();
         var bleedline = CGAlgorithm.ScalePoly(outline, 0.0125f);
 
         DrawLine(bleedline, Color.blue);

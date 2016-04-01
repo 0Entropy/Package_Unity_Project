@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Geometry;
+using UnityEngine.UI;
 
 //[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class PackageImporter : MonoBehaviour
@@ -25,52 +26,49 @@ public class PackageImporter : MonoBehaviour
     {
         get
         {
-
-            _shape = new Shape2D();
-            //Debug.Log("Children Count : " + transform.childCount);
-
-            int i = 0;
-            foreach (Transform child in transform)
+            if (_shape == null)
             {
-                var mesh = child.GetComponent<MeshFilter>().sharedMesh;
-                _shape.AddMesh(mesh);
-                //Debug.Log(string.Format("index : {0}, mesh's point Count : {1}, points count : {2}", i, mesh.vertexCount, _shape.AllPoints.Count));
-                i++;
+
+                _shape = new Shape2D();
+
+                int i = 0;
+                foreach (Transform child in transform)
+                {
+                    var mesh = child.GetComponent<MeshFilter>().sharedMesh;
+                    _shape.AddMesh(mesh);
+
+                    i++;
+                }
+
+            }
+            return _shape;
+
+        }
+    }
+
+    public List<Vector2> Outline
+    {
+        get
+        {
+            return Shape.OutlinePoints.Select(p => (Vector2)p.Position).ToList();
+
+        }
+    }
+
+    public List<Vector2> Bleedline
+    {
+        get
+        {
+
+            List<List<Vector2>> result = new List<List<Vector2>>();
+            foreach (var child in GetComponentsInChildren<PanelImporter>())
+            {
+                result.Add(child.Bleedline);
             }
 
-            //Debug.Log("Package i Add : " + i);
+            return PolygonAlgorithm.Merge(result);
 
-
-
-            return _shape;
         }
     }
 
-    public List<Vector2> GetBleedLine(float bleedDimension)
-    {
-        //List<List<Vector2>> result = new List<List<Vector2>>();
-        List<Vector2> result = new List<Vector2>();
-
-        foreach (var child in transform.GetComponentsInChildren<PanelImporter>())
-        {
-            var bleed = CGAlgorithm.ScalePoly(child.Shape.OutlinePoints.Select(p => (Vector2)p.Position).ToList(), bleedDimension);
-            if (result.Count == 0)
-                result.AddRange(bleed);
-            //CGAlgorithm.
-            //result.Add(bleed);
-        }
-
-        //return PolygonAlgorithm.Merge(result);
-
-        return null;
-    }
-    /*// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}*/
 }
