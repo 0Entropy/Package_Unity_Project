@@ -715,6 +715,31 @@ of a point in an arbitrary polygon.
 		}
 		//return false;
 	}
+
+    public static float PointToSegementDistance(Vector2 P1, Vector2 P2, Vector2 P3, out Vector2 position)
+    {
+        position = P1;
+        Vector2 u = P1 - P2;
+        Vector2 v = P3 - P2;
+        float t = Dot(u, v) / Dot(v);
+
+        if (t <= 0)
+        {
+            position = P2;
+            //return Vector2.Distance(P1, P2);
+        }
+        else if (t >= 1)
+        {
+            position = P3;
+            //return Vector2.Distance(P1, P3);
+        }
+        else
+        {
+            position = P2 + v * t;
+            
+        }
+        return Vector2.Distance(P1, position);
+    }
 	
 	//if P0 is on poly V's edge, and P1 is outside of V, find project on the edge.
 //	public static bool ProjectOnPolyEdge (Vector2 P0, Vector2 P1, int start, int end, List<Vector2> V, ref Intersection Inter) {
