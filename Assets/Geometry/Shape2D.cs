@@ -139,7 +139,7 @@
             //List<Edge2D> allEdges = new List<Edge2D>(AllEdges);
 
             List<Edge2D> edges = new List<Edge2D>(size);
-            
+
 
             //Debug.Log("All Edges Count : " + Edges.Count);
 
@@ -155,15 +155,17 @@
                 }
                 else
                 {
-                    
+
                     var edge = new Edge2D(points[i], points[j]);
                     Edges.Add(edge);
                     edges.Add(edge);
-                    if (!Points.Contains(points[i])) Points.Add(points[i]);
-                    if (!Points.Contains(points[j])) Points.Add(points[j]);
+                    if (!Points.Contains(points[i]))
+                        Points.Add(points[i]);
+                    if (!Points.Contains(points[j]))
+                        Points.Add(points[j]);
                 }
             }
-            
+
             return AddFace(new Face2D(edges.ToArray()));
 
         }
