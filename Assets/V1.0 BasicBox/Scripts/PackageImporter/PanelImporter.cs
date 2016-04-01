@@ -32,6 +32,8 @@ public class PanelImporter : MonoBehaviour
 
     public List<CreaseData> Creases { set; get; }
 
+    public List<Vector3> keyPoints { set; get; }
+
     private Shape2D _shape;
     public Shape2D Shape
     {
@@ -41,6 +43,7 @@ public class PanelImporter : MonoBehaviour
             {
                 _shape = new Shape2D();
                 _shape.AddMesh(GetComponent<MeshFilter>().sharedMesh);
+                keyPoints = new List<Vector3>(BorderArray);
             }
             return _shape;
         }

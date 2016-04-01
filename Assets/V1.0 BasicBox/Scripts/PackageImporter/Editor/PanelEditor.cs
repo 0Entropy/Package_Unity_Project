@@ -9,7 +9,7 @@ using Geometry;
 public class PanelEditor : Editor
 {
 
-   
+
 
     public override void OnInspectorGUI()
     {
@@ -21,19 +21,17 @@ public class PanelEditor : Editor
     {
         if (target == null)
             return;
-        
-        if(keyPoints == null)
+
+        if (keyPoints == null)
         {
             keyPoints = new List<Vector3>(ImPanel.BorderArray);
         }
 
-
-
         Handles.matrix = ImPanel.transform.localToWorldMatrix;
 
-        for (int i=0; i < keyPoints.Count; i++)
+        for (int i = 0; i < keyPoints.Count; i++)
         {
-            Handles.color = nearestLine == i ? Color.green : Color.white;
+            Handles.color = nearestIndex == i ? Color.green : Color.white;
             DrawSegment(i);
         }
 
@@ -41,16 +39,29 @@ public class PanelEditor : Editor
 
         //Handles.color = new Color(0, 0.5f, 0.8f);
 
-        foreach(var p in ImPanel.BorderArray)
+        foreach (var p in ImPanel.keyPoints)
         {
             Handles.CubeCap(0, p, Quaternion.identity, HandleUtility.GetHandleSize(p) * 0.08f);
         }
 
-        //Debug.Log(string.Format("width : {0}, height : {1}", ImPanel.Width, ImPanel.Height));
+        //Quit if panning or no camera exists
+        if (Tools.current == Tool.View || (e.isMouse && e.button > 0) || Camera.current == null || e.type == EventType.ScrollWheel)
+            return;
+
+        //Quit if laying out
+        if (e.type == EventType.Layout)
+        {
+            HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
+            return;
+        }
+
+        //Cursor rectangle
+        EditorGUIUtility.AddCursorRect(new Rect(0, 0, Camera.current.pixelWidth, Camera.current.pixelHeight), mouseCursor);
+        mouseCursor = MouseCursor.Arrow;
 
         worldToLocal = ImPanel.transform.worldToLocalMatrix;
         inverseRotation = Quaternion.Inverse(ImPanel.transform.rotation) * Camera.current.transform.rotation;
-        
+
         screenMousePosition = new Vector3(e.mousePosition.x, Camera.current.pixelHeight - e.mousePosition.y);
         var plane = new Plane(-ImPanel.transform.forward, ImPanel.transform.position);
         var ray = Camera.current.ScreenPointToRay(screenMousePosition);
@@ -60,13 +71,56 @@ public class PanelEditor : Editor
         else
             return;
 
-        //Update nearest line and split position
-        nearestLine = NearestLine(out nearestPosition);
+        //Update nearest line and nearest position
+        nearestIndex = NearestLine(out nearestPosition);
 
-        var index = -1;
-        TryHoverSegment(out index);
-        //e.Use();
+        //var index = -1;
+        //TryHoverSegment(out index);
+
+        //Update the state and repaint
+        var newState = UpdateState();
+        if (state != newState)
+            SetState(newState);
         HandleUtility.Repaint();
+
+        /*e.Use();*/
+    }
+
+    enum State { Hover, Drag }//, BoxSelect, DragSelected, RotateSelected, ScaleSelected, Extrude }
+
+    State state;
+
+    //Initialize state
+    void SetState(State newState)
+    {
+        state = newState;
+        switch (state)
+        {
+            case State.Hover:
+                break;
+        }
+        Debug.Log("state : " + state.ToString());
+    }
+
+    State UpdateState()
+    {
+        switch (state)
+        {
+            case State.Hover:
+
+                if (TryHoverSegment(out dragIndex) && TryDragSegment(dragIndex))
+                    return State.Drag;
+                break;
+
+            case State.Drag:
+                mouseCursor = MouseCursor.MoveArrow;
+                MoveSegment(dragIndex, mousePosition - clickPosition);
+                if (TryStopDrag())
+                    return State.Hover;
+                break;
+                
+        }
+        return state;
     }
 
     public PanelImporter ImPanel
@@ -94,7 +148,7 @@ public class PanelEditor : Editor
         }
     }
 
-    const float clickRadius = 0.12f;
+    const float clickRadius = 0.24f;
 
     List<Vector3> keyPoints;
 
@@ -106,11 +160,12 @@ public class PanelEditor : Editor
     Vector3 clickPosition;
     Vector3 mousePosition;
 
-    int nearestLine;
+    int nearestIndex;
+    int dragIndex;
     List<int> selectedIndices = new List<int>();
     Vector3 nearestPosition;
 
-    MouseCursor mouseCorsor;
+    MouseCursor mouseCursor;
 
     Event e
     {
@@ -147,7 +202,7 @@ public class PanelEditor : Editor
             var j = (i + 1) % keyPoints.Count;
 
             Vector2 nearPos;
-            var distance = CGAlgorithm.PointToSegementDistance(mousePosition, keyPoints[i], keyPoints[j], out nearPos);
+            var distance = MouseToSegmentDistance(i, out nearPos);
 
             if (distance < nearDist)
             {
@@ -159,12 +214,20 @@ public class PanelEditor : Editor
         }
         return near;
     }
-    
+
+    float MouseToSegmentDistance(int index, out Vector2 nearPos)
+    {
+        var next = (index + 1) % keyPoints.Count;
+
+        return CGAlgorithm.PointToSegementDistance(mousePosition, keyPoints[index], keyPoints[next], out nearPos);
+
+    }
+
     bool TryHoverSegment(out int index)
     {
-        if(TryHover(keyPoints, Color.white, out index))
+        if (TryHover(keyPoints, Color.white, out index))
         {
-            mouseCorsor = MouseCursor.MoveArrow;
+            mouseCursor = MouseCursor.MoveArrow;
             return true;
         }
         return false;
@@ -172,34 +235,71 @@ public class PanelEditor : Editor
 
     bool TryHover(List<Vector3> points, Color color, out int index)
     {
-        if(Tools.current == Tool.Move)
+        if (Tools.current == Tool.Move)
         {
             index = NearestLine(out nearestPosition);
-            if(index >= 0 && IsSegmentHovering(nearestPosition))
+            if (index >= 0 && IsSegmentHovering(index))
             {
                 Handles.color = color;
                 DrawCircle(nearestPosition, clickRadius);
                 return true;
             }
-            
+
         }
         index = -1;
         return false;
     }
 
-    bool IsSegmentHovering(Vector3 position)
+    bool IsSegmentHovering(int index)//(Vector3 position)
     {
-        return Vector3.Distance(mousePosition, position) < HandleUtility.GetHandleSize(position) * clickRadius;
+
+        Vector2 nearestPos;
+        return MouseToSegmentDistance(index, out nearestPos) < HandleUtility.GetHandleSize(nearestPos) * clickRadius;
 
     }
 
-    bool TryDragSegment(List<Vector3> points, int index)
+    bool TryDragSegment(int index)
     {
-        if (e.type == EventType.MouseDown && IsSegmentHovering(nearestPosition))
+        if (TryDrag(keyPoints, index))
         {
-            clickPosition = mousePosition;
+            //clickPosition = mousePosition;
             return true;
         }
         return false;
     }
+
+    bool TryDrag(List<Vector3> points, int index)
+    {
+        if (e.type == EventType.MouseDown && IsSegmentHovering(index))
+        {
+            clickPosition = mousePosition;
+            
+            return true;
+        }
+        return false;
+    }
+
+    bool TryStopDrag()
+    {
+        if (e.type == EventType.MouseUp)
+        {
+            dragIndex = -1;
+            //UpdatePoly(false, state != State.Extrude);
+            return true;
+        }
+        return false;
+    }
+
+    void MoveSegment(int index, Vector3 delta)
+    {
+
+        keyPoints[index] = ImPanel.keyPoints[index] + delta;
+
+        var next = (index + 1) % keyPoints.Count;
+        keyPoints[next] = ImPanel.keyPoints[next] + delta;
+
+    }
+
+
+    
 }
