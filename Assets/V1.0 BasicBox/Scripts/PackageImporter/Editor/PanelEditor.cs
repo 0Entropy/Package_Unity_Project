@@ -24,7 +24,10 @@ public class PanelEditor : Editor
 
         if (keyPoints == null)
         {
-            keyPoints = new List<Vector3>(ImPanel.BorderArray);
+            
+            keyPoints = new List<Vector3>(ImPanel.keyPoints);
+            Debug.Log("Border : " + ImPanel.BorderRect.center.ToString());
+            ImPanel.TestRowAndCol();
         }
 
         Handles.matrix = ImPanel.transform.localToWorldMatrix;
@@ -39,7 +42,7 @@ public class PanelEditor : Editor
 
         //Handles.color = new Color(0, 0.5f, 0.8f);
 
-        foreach (var p in ImPanel.keyPoints)
+        foreach (var p in keyPoints)
         {
             Handles.CubeCap(0, p, Quaternion.identity, HandleUtility.GetHandleSize(p) * 0.08f);
         }
@@ -99,7 +102,8 @@ public class PanelEditor : Editor
             case State.Hover:
                 break;
         }
-        Debug.Log("state : " + state.ToString());
+        //Debug.Log("state : " + state.ToString());
+        
     }
 
     State UpdateState()
@@ -114,7 +118,7 @@ public class PanelEditor : Editor
 
             case State.Drag:
                 mouseCursor = MouseCursor.MoveArrow;
-                MoveSegment(dragIndex, mousePosition - clickPosition);
+                MoveSegment(dragIndex, clickPosition, mousePosition);
                 if (TryStopDrag())
                     return State.Hover;
                 break;
@@ -148,7 +152,7 @@ public class PanelEditor : Editor
         }
     }
 
-    const float clickRadius = 0.24f;
+    const float clickRadius = 0.08f;
 
     List<Vector3> keyPoints;
 
@@ -166,6 +170,8 @@ public class PanelEditor : Editor
     Vector3 nearestPosition;
 
     MouseCursor mouseCursor;
+
+    bool autoSnap = true;
 
     Event e
     {
@@ -284,18 +290,56 @@ public class PanelEditor : Editor
         if (e.type == EventType.MouseUp)
         {
             dragIndex = -1;
-            //UpdatePoly(false, state != State.Extrude);
+
+            UpdateBorder();
             return true;
         }
         return false;
     }
 
-    void MoveSegment(int index, Vector3 delta)
+    private void UpdateBorder()
+    {
+        for (int i = 0; i < keyPoints.Count; i++)
+        {
+            ImPanel.keyPoints[i] = keyPoints[i];
+        }
+    }
+
+    void MoveSegment(int index, Vector3 from, Vector3 to)
     {
 
-        keyPoints[index] = ImPanel.keyPoints[index] + delta;
-
         var next = (index + 1) % keyPoints.Count;
+        var delta = to - from;
+        if (index % 2 != 0)
+        {
+            foreach(var p in ImPanel.Outline)
+            {
+                if(Math.Abs(p.y - to.y) < clickRadius)
+                {
+                    //delta.y = p.y - mousePosition.y;
+                    keyPoints[index] = new Vector3(keyPoints[index].x, p.y, 0);
+                    keyPoints[next] = new Vector3(keyPoints[next].x, p.y, 0);
+                    return;
+                }
+            }
+            delta.x = 0;
+        }
+        else
+        {
+            foreach (var p in ImPanel.Outline)
+            {
+                if (Math.Abs(p.x - to.x) < clickRadius)
+                {
+                    keyPoints[index] = new Vector3(p.x, keyPoints[index].y, 0);
+                    keyPoints[next] = new Vector3(p.x, keyPoints[next].y, 0);
+                    return;
+                }
+            }
+
+            delta.y = 0;
+        }
+
+        keyPoints[index] = ImPanel.keyPoints[index] + delta;
         keyPoints[next] = ImPanel.keyPoints[next] + delta;
 
     }

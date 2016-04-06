@@ -7,17 +7,42 @@ using Geometry;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class PanelImporter : MonoBehaviour
 {
+    public PackageImporter ImPackage { set; get; }
 
+    public void TestRowAndCol()
+    {
+        var center = BorderRect.center;
+        var l = ImPackage.Dimension.x;
+        var w = ImPackage.Dimension.z;
+        var d = ImPackage.Dimension.y;
+        var sign_x = Mathf.Sign(center.x);
+        var sign_y = Mathf.Sign(center.y);
+        
+        var col = Mathf.RoundToInt((center.x) / (l + w) * 2.0f);
+        
+        var row = Mathf.RoundToInt((center.y) / (d + (col % 2 == 0 ? w : l)) * 2.0f);
 
+        Debug.Log(string.Format("Col : {0}, Row : {1};", col, row));
+    }
 
     /// <summary>
     /// Grid_Y Value
     /// </summary>
-    public int Row { set; get; }
+    public int Row
+    {
+        get
+        {
+            var actual_center_x = BorderRect.center.x;
+
+            return 0;
+        }
+    }
     /// <summary>
     /// Grid_x Value
     /// </summary>
     public int Col { set; get; }
+
+
 
     public float Width { get { return BorderRect.size.x; } }
     public float Height { get { return BorderRect.size.y; } }
@@ -34,6 +59,8 @@ public class PanelImporter : MonoBehaviour
 
     public List<Vector3> keyPoints { set; get; }
 
+
+
     private Shape2D _shape;
     public Shape2D Shape
     {
@@ -49,11 +76,12 @@ public class PanelImporter : MonoBehaviour
         }
     }
 
+
+
     public List<Vector2> Outline
     {
         get
         {
-
             return Shape.OutlinePoints.Select(p => (Vector2)p.Position).ToList();
 
         }
@@ -78,6 +106,14 @@ public class PanelImporter : MonoBehaviour
 
             return Rect.MinMaxRect(min_x, min_y, max_x, max_y);
 
+        }
+    }
+
+    public Rect OriginalRect
+    {
+        get
+        {
+            return new Rect();
         }
     }
 
