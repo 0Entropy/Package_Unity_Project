@@ -9,10 +9,7 @@ using Geometry;
 [CustomEditor(typeof(PackageImporter))]
 public class PackageEditor : Editor
 {
-    //Shape2D Shape;
-
-    bool isFirst = true;
-
+    
     public override void OnInspectorGUI()
     {
         if (target == null)
@@ -24,10 +21,7 @@ public class PackageEditor : Editor
         {
 
             Debug.Log(ImPackage.Shape);
-
-
-            isFirst = false;
-
+            
             var shape = ImPackage.Shape;
 
             DrawKeyPoints();
@@ -37,15 +31,20 @@ public class PackageEditor : Editor
 
         if (dimensionSettings = EditorGUILayout.Foldout(dimensionSettings, "Dimension (mm)"))
         {
-            var dimension = string.Format("Length : {0}, Width : {1}, Depth : {2}, Thickness : {3}",
-                ImPackage.Length, ImPackage.Width, ImPackage.Depth, ImPackage.Thickness);
+            /*var dimension = string.Format("Length : {0}, Width : {1}, Depth : {2}, Thickness : {3}",
+                ImPackage.Length, ImPackage.Width, ImPackage.Depth, ImPackage.Thickness);*/
 
-            var whatever = EditorGUILayout.TextArea(dimension);
-            var whatever_0 = EditorGUILayout.TextField(whatever);
+            /*var whatever = EditorGUILayout.TextArea(dimension);
+            var whatever_0 = EditorGUILayout.TextField(whatever);*/
+
+            //var dimension = EditorGUILayout.Vector3Field("Dimension", ImPackage.Dimension);
+            var length = EditorGUILayout.FloatField("L", ImPackage.Dimension.x);
+            var width = EditorGUILayout.FloatField("W", ImPackage.Dimension.z);
+            var depth = EditorGUILayout.FloatField("D", ImPackage.Dimension.y);
 
             if (GUI.changed)
             {
-
+                ImPackage.Dimension = new Vector3(length, depth, width);
             }
         }
     }

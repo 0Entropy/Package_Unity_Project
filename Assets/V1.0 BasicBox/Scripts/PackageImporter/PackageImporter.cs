@@ -7,18 +7,17 @@ using UnityEngine.UI;
 //[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class PackageImporter : MonoBehaviour
 {
-
-    public float Length = 10f;
-    public float Width = 10f;
-    public float Depth = 10f;
+    
     public float Thickness = 1f;
+
+    public Vector3 Dimension;
 
     public List<Vector3> Vertices { set; get; }
 
     public List<int> Indices { set; get; }
 
     public List<PanelData> Panels = new List<PanelData>();
-
+    
     public List<CreaseData> Creases = new List<CreaseData>();
 
     private Shape2D _shape;
@@ -36,6 +35,13 @@ public class PackageImporter : MonoBehaviour
                 {
                     var mesh = child.GetComponent<MeshFilter>().sharedMesh;
                     _shape.AddMesh(mesh);
+
+                    var panel = child.GetComponent<PanelImporter>();
+                    if(panel == null)
+                    {
+                        panel = child.gameObject.AddComponent<PanelImporter>();
+                    }
+                    panel.ImPackage = this;
 
                     i++;
                 }
