@@ -16,7 +16,7 @@ namespace Geometry
                 var p1 = new Point2D(mesh.vertices[mesh.triangles[i + 1]]);//, mesh.name + "-" + mesh.triangles[i+1]);
                 var p2 = new Point2D(mesh.vertices[mesh.triangles[i + 2]]);//, mesh.name + "-" + mesh.triangles[i+2]);
                 
-                var face = shape.AddPoints(p0, p1, p2);
+                shape.AddPoints(p0, p1, p2);
             }
         }
     }
