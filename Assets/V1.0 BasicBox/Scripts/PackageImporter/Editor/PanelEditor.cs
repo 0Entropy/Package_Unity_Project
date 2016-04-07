@@ -26,8 +26,8 @@ public class PanelEditor : Editor
         {
             
             keyPoints = new List<Vector3>(ImPanel.keyPoints);
-            Debug.Log("Border : " + ImPanel.BorderRect.center.ToString());
-            ImPanel.TestRowAndCol();
+            Debug.Log("Border Rect Center : " + ImPanel.BorderRect.center.ToString());
+            //var dimension = ImPanel.DimensionArray;
         }
 
         Handles.matrix = ImPanel.transform.localToWorldMatrix;

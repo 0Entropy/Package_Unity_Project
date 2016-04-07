@@ -20,9 +20,17 @@ public class PackageEditor : Editor
         if (GUILayout.Button("Reset"))
         {
 
-            Debug.Log(ImPackage.Shape);
+            /*Debug.Log(ImPackage.Shape);
             
-            var shape = ImPackage.Shape;
+            var shape = ImPackage.Shape;*/
+
+            ImPackage.ResetShape();
+            ImPackage.ResetDimension();
+
+            foreach(var p in ImPackage.DimenRects[0].Vertices)
+            {
+                Debug.Log(p);
+            }
 
             DrawKeyPoints();
             
@@ -38,13 +46,16 @@ public class PackageEditor : Editor
             var whatever_0 = EditorGUILayout.TextField(whatever);*/
 
             //var dimension = EditorGUILayout.Vector3Field("Dimension", ImPackage.Dimension);
-            var length = EditorGUILayout.FloatField("L", ImPackage.Dimension.x);
-            var width = EditorGUILayout.FloatField("W", ImPackage.Dimension.z);
-            var depth = EditorGUILayout.FloatField("D", ImPackage.Dimension.y);
+            var length = EditorGUILayout.FloatField("L", ImPackage.Length);///.Dimension.x);
+            var width = EditorGUILayout.FloatField("W", ImPackage.Width);//.Dimension.z);
+            var depth = EditorGUILayout.FloatField("D", ImPackage.Depth);//.Dimension.y);
 
             if (GUI.changed)
             {
-                ImPackage.Dimension = new Vector3(length, depth, width);
+                //ImPackage.Dimension = new Vector3(length, depth, width);
+                ImPackage.Length = length;
+                ImPackage.Width = width;
+                ImPackage.Depth = depth;
             }
         }
     }
@@ -67,6 +78,11 @@ public class PackageEditor : Editor
 
         DrawLine(ImPackage.Bleedline, new Color(0.0f, 0.4f, 0.6f));
 
+        //DrawLine(ImPackage.Dimensions[0].Vertices, Color.red);
+        foreach(var dimen in ImPackage.DimenRects)
+        {
+            DrawLine(dimen.Vertices, new Color(1, 0, 0));
+        }
 
         //DrawBleedLine();
 
