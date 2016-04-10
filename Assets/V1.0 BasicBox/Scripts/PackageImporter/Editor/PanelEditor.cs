@@ -9,7 +9,7 @@ using Geometry;
 public class PanelEditor : Editor
 {
 
-
+    List<Vector2> AlignPoints = new List<Vector2>();
 
     public override void OnInspectorGUI()
     {
@@ -25,12 +25,26 @@ public class PanelEditor : Editor
         if (keyPoints == null)
         {
             
-            keyPoints = new List<Vector3>(ImPanel.keyPoints);
-            Debug.Log("Border Rect Center : " + ImPanel.BorderRect.center.ToString());
+            keyPoints = new List<Vector3>(ImPanel.BorderPoints);
+            //Debug.Log("Border Rect Center : " + ImPanel.BorderRect.center.ToString());
             //var dimension = ImPanel.DimensionArray;
+            AlignPoints.AddRange(ImPanel.Outline);
+            AlignPoints.AddRange(ImPanel.DimPoints);
         }
 
         Handles.matrix = ImPanel.transform.localToWorldMatrix;
+
+        //Handles.Label(ImPanel.DimRect.center, ImPanel.Col + ", " + ImPanel.Row);
+
+        //Handles.Label(ImPanel.DimRect.center + Vector2.up, ImPanel.Left + ", " + ImPanel.Right + ", " + ImPanel.Top + ", " + ImPanel.Bottom);
+
+        DrawOffsetLabel();
+
+        DrawBorderLabel();
+
+        
+
+        DrawLine(ImPanel.DimPoints, new Color(1, 0, 0), 4);
 
         for (int i = 0; i < keyPoints.Count; i++)
         {
@@ -44,7 +58,8 @@ public class PanelEditor : Editor
 
         foreach (var p in keyPoints)
         {
-            Handles.CubeCap(0, p, Quaternion.identity, HandleUtility.GetHandleSize(p) * 0.08f);
+            Handles.color = Color.white;
+            Handles.CubeCap(0, p, Quaternion.identity, HandleUtility.GetHandleSize(p) * 0.06f);
         }
 
         //Quit if panning or no camera exists
@@ -135,6 +150,56 @@ public class PanelEditor : Editor
         }
     }
 
+ 
+    const float clickRadius = 0.08f;
+
+    List<Vector3> keyPoints;
+
+    Matrix4x4 worldToLocal;
+    Quaternion inverseRotation;
+
+    Vector3 screenMousePosition;
+
+    Vector3 clickPosition;
+    Vector3 mousePosition;
+
+    int nearestIndex;
+    int dragIndex;
+    //List<int> selectedIndices = new List<int>();
+    Vector3 nearestPosition;
+
+    MouseCursor mouseCursor;
+
+    bool autoSnap = true;
+
+    Event e
+    {
+        get { return Event.current; }
+    }
+
+    void DrawBorderLabel()
+    {
+        var cX = ImPanel.DimRect.center.x;
+        var cY = ImPanel.DimRect.center.y;
+        var iX = ImPanel.DimRect.xMin;
+        var aX = ImPanel.DimRect.xMax;
+        var iY = ImPanel.DimRect.yMin;
+        var aY = ImPanel.DimRect.yMax;
+
+        var offset = HandleUtility.GetHandleSize(ImPanel.DimRect.center) * 0.2F;
+
+        Handles.Label(new Vector3(iX, cY, 0) + Vector3.right * offset, "R: \n" + ImPanel.Right);
+        Handles.Label(new Vector3(aX, cY, 0) + Vector3.right * offset, "L: \n" + ImPanel.Left);
+        Handles.Label(new Vector3(cX, iY, 0) + Vector3.up * offset, "B: \n" + ImPanel.Bottom);
+        Handles.Label(new Vector3(cX, aY, 0) + Vector3.up * offset, "T: \n" + ImPanel.Top);
+    }
+
+    void DrawOffsetLabel()
+    {
+        var offset = HandleUtility.GetHandleSize(ImPanel.DimRect.center) * 0.5F;
+        Handles.Label(ImPanel.DimRect.center + Vector2.right * offset, "min : " + ImPanel.offsetMin.ToString() + "\nmax : " + ImPanel.offsetMax.ToString());
+    }
+
     void DrawLine(IEnumerable<Vector2> points, Color32 color, float DottedSpaceSize = 0)
     {
         Handles.color = color;
@@ -150,32 +215,6 @@ public class PanelEditor : Editor
 
             current = next;
         }
-    }
-
-    const float clickRadius = 0.08f;
-
-    List<Vector3> keyPoints;
-
-    Matrix4x4 worldToLocal;
-    Quaternion inverseRotation;
-
-    Vector3 screenMousePosition;
-
-    Vector3 clickPosition;
-    Vector3 mousePosition;
-
-    int nearestIndex;
-    int dragIndex;
-    List<int> selectedIndices = new List<int>();
-    Vector3 nearestPosition;
-
-    MouseCursor mouseCursor;
-
-    bool autoSnap = true;
-
-    Event e
-    {
-        get { return Event.current; }
     }
 
     void DrawCircle(Vector3 position, float size)
@@ -205,7 +244,7 @@ public class PanelEditor : Editor
         for (int i = 0; i < keyPoints.Count; i++)
         {
 
-            var j = (i + 1) % keyPoints.Count;
+            //var j = (i + 1) % keyPoints.Count;
 
             Vector2 nearPos;
             var distance = MouseToSegmentDistance(i, out nearPos);
@@ -301,7 +340,7 @@ public class PanelEditor : Editor
     {
         for (int i = 0; i < keyPoints.Count; i++)
         {
-            ImPanel.keyPoints[i] = keyPoints[i];
+            ImPanel.BorderPoints[i] = keyPoints[i];
         }
     }
 
@@ -312,9 +351,9 @@ public class PanelEditor : Editor
         var delta = to - from;
         if (index % 2 != 0)
         {
-            foreach(var p in ImPanel.Outline)
+            foreach(var p in AlignPoints)
             {
-                if(Math.Abs(p.y - to.y) < clickRadius)
+                if(Math.Abs(p.y - to.y) < HandleUtility.GetHandleSize(p) * 0.2F)
                 {
                     //delta.y = p.y - mousePosition.y;
                     keyPoints[index] = new Vector3(keyPoints[index].x, p.y, 0);
@@ -326,9 +365,9 @@ public class PanelEditor : Editor
         }
         else
         {
-            foreach (var p in ImPanel.Outline)
+            foreach (var p in AlignPoints)
             {
-                if (Math.Abs(p.x - to.x) < clickRadius)
+                if (Math.Abs(p.x - to.x) < HandleUtility.GetHandleSize(p) * 0.2F)
                 {
                     keyPoints[index] = new Vector3(p.x, keyPoints[index].y, 0);
                     keyPoints[next] = new Vector3(p.x, keyPoints[next].y, 0);
@@ -339,8 +378,8 @@ public class PanelEditor : Editor
             delta.y = 0;
         }
 
-        keyPoints[index] = ImPanel.keyPoints[index] + delta;
-        keyPoints[next] = ImPanel.keyPoints[next] + delta;
+        keyPoints[index] = ImPanel.BorderPoints[index] + delta;
+        keyPoints[next] = ImPanel.BorderPoints[next] + delta;
 
     }
 

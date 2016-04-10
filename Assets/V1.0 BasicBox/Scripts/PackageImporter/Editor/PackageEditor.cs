@@ -9,32 +9,61 @@ using Geometry;
 [CustomEditor(typeof(PackageImporter))]
 public class PackageEditor : Editor
 {
-    
+
     public override void OnInspectorGUI()
     {
         if (target == null)
             return;
 
-
-
-        if (GUILayout.Button("Reset"))
+        if (GUILayout.Button("Initial"))
         {
 
-            /*Debug.Log(ImPackage.Shape);
+        }
+
+       /* if (GUILayout.Button("Reset"))
+        {
+
+            / *Debug.Log(ImPackage.Shape);
             
-            var shape = ImPackage.Shape;*/
+            var shape = ImPackage.Shape;* /
 
             ImPackage.ResetShape();
             ImPackage.ResetDimension();
 
-            foreach(var p in ImPackage.DimenRects[0].Vertices)
+            foreach (var panel in ImPackage.GetComponentsInChildren<PanelImporter>())
+            {
+                panel.ResetShape();
+            }
+
+            foreach (var p in ImPackage.Dimensions[0].Vertices)
             {
                 Debug.Log(p);
             }
 
             DrawKeyPoints();
-            
+
             //imPackage.Shape.LogOutline();
+        }*/
+
+        if(initinalSettings = EditorGUILayout.Foldout(initinalSettings, "On Initial"))
+        {
+           /* var meshObj = (GameObject)EditorGUILayout.ObjectField("Mesh Prefab", ImPackage.InitMesh, typeof(GameObject));
+            var initDim = EditorGUILayout.Vector3Field("Initial Dimension :", ImPackage.InitDim);
+
+
+
+            if (GUI.changed)
+            {
+                ImPackage.InitDim = initDim;
+                ImPackage.InitMesh = meshObj;
+            }
+
+            if (GUILayout.Button("Initial"))
+            {
+                ImPackage.InitDim = initDim;
+                ImPackage.InitMesh = meshObj;
+                ImPackage.OnInit();
+            }*/
         }
 
         if (dimensionSettings = EditorGUILayout.Foldout(dimensionSettings, "Dimension (mm)"))
@@ -50,12 +79,16 @@ public class PackageEditor : Editor
             var width = EditorGUILayout.FloatField("W", ImPackage.Width);//.Dimension.z);
             var depth = EditorGUILayout.FloatField("D", ImPackage.Depth);//.Dimension.y);
 
+            //var offset = EditorGUILayout.Vector2Field("Offset", ImPackage.Offset);
+
             if (GUI.changed)
             {
                 //ImPackage.Dimension = new Vector3(length, depth, width);
                 ImPackage.Length = length;
                 ImPackage.Width = width;
                 ImPackage.Depth = depth;
+                //ImPackage.Offset = offset;
+                
             }
         }
     }
@@ -79,10 +112,10 @@ public class PackageEditor : Editor
         DrawLine(ImPackage.Bleedline, new Color(0.0f, 0.4f, 0.6f));
 
         //DrawLine(ImPackage.Dimensions[0].Vertices, Color.red);
-        foreach(var dimen in ImPackage.DimenRects)
+        /*foreach (var dimen in ImPackage.Dimensions)
         {
             DrawLine(dimen.Vertices, new Color(1, 0, 0));
-        }
+        }*/
 
         //DrawBleedLine();
 
@@ -101,6 +134,12 @@ public class PackageEditor : Editor
     PackageImporter ImPackage
     {
         get { return (PackageImporter)target; }
+    }
+
+    static bool initinalSettings
+    {
+        get { return EditorPrefs.GetBool("PackageEditor_initinalSettings", false); }
+        set { EditorPrefs.SetBool("PackageEditor_initinalSettings", value); }
     }
 
     static bool dimensionSettings

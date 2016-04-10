@@ -9,114 +9,50 @@ public class PanelImporter : MonoBehaviour
 {
     public PackageImporter ImPackage { set; get; }
 
-    public Vector2[] DimensionArray
-    {
-        get
-        {
-            var center = BorderRect.center;
-            return ImPackage.GetDimension(center);
 
-
-        }
-    }
-
-    
 
     /// <summary>
     /// Grid_Y Value
     /// </summary>
-    public int Row
-    {
-        get
-        {
-            var actual_center_x = BorderRect.center.x;
-
-            return 0;
-        }
-    }
+    public int Row;// { set; get; }
     /// <summary>
     /// Grid_x Value
     /// </summary>
-    public int Col { set; get; }
+    public int Col;// { set; get; }
 
-
-
-    public float Width { get { return BorderRect.size.x; } }
-    public float Height { get { return BorderRect.size.y; } }
+    //public float Width { get { return BorderRect.size.x; } }
+    //public float Height { get { return BorderRect.size.y; } }
 
     //public RectOffset Border { set; get; }
-    public float Left { set; get; }
-    public float Right { set; get; }
-    public float Top { set; get; }
-    public float Bottom { set; get; }
+    public float Right { get { return  BorderRect.xMin - DimRect.xMin; } }
+    public float Left { get {return DimRect.xMax - BorderRect.xMax; } }
+    public float Top { get { return DimRect.yMax - BorderRect.yMax; } }
+    public float Bottom { get { return BorderRect.yMin - DimRect.yMin; } }
 
     public List<Vector3> Vertices { set; get; }
 
     public List<CreaseData> Creases { set; get; }
 
-    public List<Vector3> keyPoints { set; get; }
+    public Rect DimRect { set; get; }
+    //public Vector2[] DimArray { set; get; }
+    public List<Vector2> DimPoints { set; get; }
+    public List<Vector3> BorderPoints { set; get; }
 
+    private Shape2D Shape { set; get; }
 
+    public List<Vector2> Outline { set; get; }
 
-    private Shape2D _shape;
-    public Shape2D Shape
-    {
-        get
-        {
-            if (_shape == null) 
-            {
-                _shape = new Shape2D();
-                _shape.AddMesh(GetComponent<MeshFilter>().sharedMesh);
-                keyPoints = new List<Vector3>(DimensionArray.Select(p => (Vector3)p));//BorderArray);
-            }
-            return _shape;
-        }
-    }
-
-
-
-    public List<Vector2> Outline
-    {
-        get
-        {
-            return Shape.OutlinePoints.Select(p => (Vector2)p.Position).ToList();
-
-        }
-
-    }
-
-    public List<Vector2> Bleedline
-    {
-        get
-        {
-            return CGAlgorithm.ScalePoly(Outline, 0.03f);
-        }
-    }
+    public List<Vector2> Bleedline { set; get; }
 
     public Rect BorderRect
     {
         get
         {
-            
-            var min_x = Outline.Min(p => p.x);
-            var max_x = Outline.Max(p => p.x);
-            var min_y = Outline.Min(p => p.y);
-            var max_y = Outline.Max(p => p.y);
-
-            return Rect.MinMaxRect(min_x, min_y, max_x, max_y);
-
+            return BorderPoints.BorderRect();
         }
     }
 
-    public Rect OriginalRect
-    {
-        get
-        {
-            return new Rect();
-        }
-    }
-
-    public Vector3[] BorderArray
+    public Vector2 Center
     {
         get
         {
@@ -125,14 +61,42 @@ public class PanelImporter : MonoBehaviour
             var min_y = Outline.Min(p => p.y);
             var max_y = Outline.Max(p => p.y);
 
-            return new Vector3[]
-            {
-                new Vector2(min_x, min_y),
-                new Vector2(min_x, max_y),
-                new Vector2(max_x, max_y),
-                new Vector2(max_x, min_y)
-            };
+            var center_x = (max_x + min_x) * 0.5f;
+            var center_y = (max_y + min_y) * 0.5f;
+
+            return new Vector2(center_x, center_y);
         }
+    }
+
+    public Vector2 offsetMin, offsetMax;
+
+    public void OnResize()
+    {
+        ///var destRect = ImPackage.GetRectByRowAndCol(Row, Col);
+        
+        ImPackage.GetRectTransformByRowAndCol(Row, Col, ref offsetMin, ref offsetMax);
+
+        
+    }
+    
+    public void OnInit(PackageImporter package)
+    {
+        ImPackage = package;
+        InitShape();
+        //DimArray = package.GetDimVertices(Center, ref Row, ref Col);
+        DimRect = package.GetDimVertices(Center, ref Row, ref Col);
+        DimPoints = new List<Vector2>(DimRect.Vector2Array());
+        //keyPoints = new List<Vector3>(DimArray.Select(p => (Vector3)p));
+        BorderPoints = new List<Vector3>(DimRect.Vector3Array());
+    }
+
+    void InitShape()
+    {
+        Shape = new Shape2D();
+        Shape.AddMesh(GetComponent<MeshFilter>().sharedMesh);
+
+        Outline = Shape.OutlinePoints.Select(p => (Vector2)p.Position).ToList();
+        Bleedline = CGAlgorithm.ScalePoly(Outline, 0.03f);
     }
 
 }
