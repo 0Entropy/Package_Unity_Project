@@ -12,12 +12,14 @@ public class PackageImportWindow : EditorWindow
 
     GameObject srcMeshObj;
 
-    PackageImporter mPackage;
+    Package mPackage;
     float Length = 1.2f;
     float Width = 1.0f;
     float Depth = 2.0f;
 
-    float newLength, newWidth, newDepth;
+    float destLength = 1.2f;
+    float destWidth = 1.0f;
+    float destDepth = 2.0f;
 
     // Add menu named "My Window" to the Window menu
     [MenuItem("Window/Package Import Window")]
@@ -58,13 +60,13 @@ public class PackageImportWindow : EditorWindow
         GUILayout.Space(8);
         GUILayout.Label("Resize Settings", EditorStyles.boldLabel);
 
-        newLength = EditorGUILayout.FloatField("Length", newLength);///.Dimension.x);
-        newWidth = EditorGUILayout.FloatField("Width", newWidth);//.Dimension.z);
-        newDepth = EditorGUILayout.FloatField("Depth", newDepth);//.Dimension.y);
+        destLength = EditorGUILayout.FloatField("Length", destLength);///.Dimension.x);
+        destWidth = EditorGUILayout.FloatField("Width", destWidth);//.Dimension.z);
+        destDepth = EditorGUILayout.FloatField("Depth", destDepth);//.Dimension.y);
 
         if (GUILayout.Button("Resize"))
         {
-            OnResize(newLength, newWidth, newDepth);
+            OnResize(destLength, destWidth, destDepth);
         }
         packageID = EditorGUILayout.TextField("Package ID", srcMeshObj.name);
 
@@ -82,15 +84,15 @@ public class PackageImportWindow : EditorWindow
             DestroyImmediate(mPackage.gameObject);
         var obj = Instantiate(srcMeshObj);
 
-        mPackage = obj.AddComponent<PackageImporter>();
+        mPackage = obj.AddComponent<Package>();
         mPackage.OnInit(Length, Width, Depth);
     }
 
-    void OnResize(float l, float w, float d)
+    void OnResize(float Length, float Width, float Depth)
     {
-        if (l == Length && w == Width && d == Depth)
-            throw new System.Exception("THE DIMENSION IS SAME AS INITIAL!");
-        mPackage.OnResize(l, w, d);
+        /*if (l == Length && w == Width && d == Depth)
+            throw new System.Exception("THE DIMENSION IS SAME AS INITIAL!");*/
+        mPackage.OnResize(Length, Width, Depth);
 
     }
 

@@ -6,25 +6,20 @@ using UnityEngine.UI;
 using System.Collections;
 
 //[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
-public class PackageImporter : MonoBehaviour
+public class Package : MonoBehaviour
 {
 
-    public GameObject InitMesh { set; get; }
-
-    public List<PanelData> Panels = new List<PanelData>();
-
-    public List<CreaseData> Creases = new List<CreaseData>();
 
 
+    //public GameObject InitMesh { set; get; }
 
-    //public Vector3 Dimension;
+    //public List<PanelData> Panels = new List<PanelData>();
 
+    //public List<CreaseData> Creases = new List<CreaseData>();
+    
+    //public List<Vector3> Vertices { set; get; }
 
-    //public Vector2 Offset { set; get; }
-
-    public List<Vector3> Vertices { set; get; }
-
-    public List<int> Indices { set; get; }
+    //public List<int> Indices { set; get; }
 
     public Shape2D Shape { set; get; }
 
@@ -43,6 +38,9 @@ public class PackageImporter : MonoBehaviour
 
     public Rect[,] RectMatrix { set; get; }
 
+    public List<Crease> Creases { set; get; }
+
+    public Panel[,] Panels { set; get; }
 
     #region Resize
 
@@ -54,7 +52,7 @@ public class PackageImporter : MonoBehaviour
 
         foreach(Transform child in transform)
         {
-            var panel = child.GetComponent<PanelImporter>();
+            var panel = child.GetComponent<Panel>();
             if (!panel)
             {
                 //panel = child.gameObject.AddComponent<PanelImporter>();
@@ -72,9 +70,7 @@ public class PackageImporter : MonoBehaviour
         InitDimension(length, width, depth, thickness);
 
         InitShape();
-
-
-
+        
     }
 
     void InitDimension(float length, float width, float depth, float thickness)
@@ -85,6 +81,7 @@ public class PackageImporter : MonoBehaviour
         Thickness = thickness;
 
         RectMatrix = CalcRectMatrix(length, width, depth);
+        ResizeMatrix = CalcRectMatrix(length, width, depth);
     }
 
     void InitShape()
@@ -98,13 +95,12 @@ public class PackageImporter : MonoBehaviour
             var mesh = child.GetComponent<MeshFilter>().sharedMesh;
             Shape.AddMesh(mesh);
 
-            var panel = child.GetComponent<PanelImporter>();
+            var panel = child.GetComponent<Panel>();
             if (!panel)
             {
-                panel = child.gameObject.AddComponent<PanelImporter>();
+                panel = child.gameObject.AddComponent<Panel>();
             }
-            //panel.ImPackage = this;
-            // panel.ResetShape();
+
             panel.OnInit(this);
 
             bleedInChildren.Add(panel.Bleedline);
@@ -129,7 +125,7 @@ public class PackageImporter : MonoBehaviour
             for (int col = -3, j = 0; col <= 3; col++, j++)
             {
                 var c_x = col * d_x;
-                var c_y = row * (col % 2 == 0 ? d_y_0 : d_y_1) + 0.0059F;
+                var c_y = row * (col % 2 == 0 ? d_y_0 : d_y_1)+ 0.0059F;
 
                 var w = col % 2 == 0 ? length : width;
                 var h = row % 2 == 0 ? depth : (col % 2 == 0 ? width : length);
@@ -164,13 +160,17 @@ public class PackageImporter : MonoBehaviour
                 }
             }
         }
-
-
+        
         throw new System.Exception("NO SUCH RECTANGLE ");
     }
 
     public void GetRectTransformByRowAndCol(int row, int col, ref Vector2 offsetMin, ref Vector2 offsetMax)
     {
+        if(ResizeMatrix == null || RectMatrix == null)
+        {
+            return;
+        }
+
         var i = row + 2;
         var j = col + 3;
 
