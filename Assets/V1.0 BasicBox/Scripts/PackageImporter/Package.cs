@@ -40,7 +40,8 @@ public class Package : MonoBehaviour
 
     public List<Crease> Creases { set; get; }
 
-    public Panel[,] Panels { set; get; }
+    //public Panel[,] Panels { set; get; }
+    public Matrix<Panel> Panels { set; get; }
 
     #region Resize
 
@@ -50,7 +51,7 @@ public class Package : MonoBehaviour
     {
         ResizeMatrix = CalcRectMatrix(length, width, depth);
 
-        foreach(Transform child in transform)
+        /*foreach(Transform child in transform)
         {
             var panel = child.GetComponent<Panel>();
             if (!panel)
@@ -59,7 +60,22 @@ public class Package : MonoBehaviour
                 continue;
             }
             panel.OnResize();
+        }*/
+
+        for (int row = -2, i = 0; row <= 2; row++, i++)
+        {
+            for (int col = -3, j = 0; col <= 3; col++, j++)
+            {
+                var panel = Panels[row, col];
+                if (panel == null)
+                    continue;
+
+                var offsetMin = ResizeMatrix[i, j].min - RectMatrix[i, j].min;
+                var offsetMax = ResizeMatrix[i, j].max - RectMatrix[i, j].max;
+                panel.OnResize(offsetMin, offsetMax);
+            }
         }
+
     }
 
     #endregion
@@ -86,6 +102,8 @@ public class Package : MonoBehaviour
 
     void InitShape()
     {
+        Panels = new Matrix<Panel>();
+
         Shape = new Shape2D();
 
         List<List<Vector2>> bleedInChildren = new List<List<Vector2>>();
@@ -101,7 +119,10 @@ public class Package : MonoBehaviour
                 panel = child.gameObject.AddComponent<Panel>();
             }
 
-            panel.OnInit(this);
+            //panel.OnInit(this);
+            panel.mPackage = this;
+            panel.InitShape();
+            Add(panel);
 
             bleedInChildren.Add(panel.Bleedline);
 
@@ -143,6 +164,28 @@ public class Package : MonoBehaviour
         return result;
     }
 
+    public void Add(Panel panel)
+    {
+        
+
+        for (int row = -2, i = 0; row <= 2; row++, i++)
+        {
+            for (int col = -3, j = 0; col <= 3; col++, j++)
+            {
+                var rect = RectMatrix[i, j];
+                //var vertices = rect.Vector2Array();
+                if (CGAlgorithm.CN_PnPoly(panel.Center, rect.Vector2Array()) == 1)
+                {
+                    panel.InitDimension(rect);
+                    Panels[row, col] = panel;
+                    return;
+                }
+            }
+        }
+
+        throw new System.Exception("NO SUCH RECTANGLE ");
+    }
+
     public Rect GetDimVertices(Vector2 position, ref int r, ref int c)
     {
 
@@ -179,4 +222,15 @@ public class Package : MonoBehaviour
         ///return new RectOffset(max.x, min.x, max.y, min.y);
     }
 }
+public class Matrix<T>
+{
+    private const int offsetRow = 2;
+    private const int offsetCol = 3;
 
+    private T[,] mPanels = new T[5, 7];
+    public T this[int row, int col]
+    {
+        set { mPanels[row + offsetRow, col + offsetCol] = value; }
+        get { return mPanels[row + offsetRow, col + offsetCol]; }
+    }
+}

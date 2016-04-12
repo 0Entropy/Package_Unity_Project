@@ -65,16 +65,39 @@ public class Panel : MonoBehaviour
         }
     }
 
-    public Vector2 offsetMin, offsetMax;
+    public Vector2 OffsetMin, OffsetMax;
     public List<Vector2> destVertices = new List<Vector2>();
 
-    public void OnResize()
+    /*public void OnResize()
     {
         ///var destRect = ImPackage.GetRectByRowAndCol(Row, Col);
         
-        mPackage.GetRectTransformByRowAndCol(Row, Col, ref offsetMin, ref offsetMax);
+        mPackage.GetRectTransformByRowAndCol(Row, Col, ref OffsetMin, ref OffsetMax);
         destVertices.Clear();
         for(int i=0; i<Outline.Count; i++)
+        {
+            var aX = Alphas[i].x;
+            var aY = Alphas[i].y;
+            var dX = OffsetMin.x * (1.0f - aX) + OffsetMax.x * aX;
+            var dY = OffsetMin.y * (1.0f - aY) + OffsetMax.y * aY;
+            var x = Outline[i].x + dX;
+            var y = Outline[i].y + dY;
+            destVertices.Add(new Vector2(x, y));
+        }
+        
+    }*/
+    public void OnResize()
+    {
+        OnResize(OffsetMin, OffsetMax);
+    }
+
+    public void OnResize(Vector2 offsetMin, Vector2 offsetMax)
+    {
+        OffsetMin = offsetMin;
+        OffsetMax = offsetMax;
+
+        destVertices.Clear();
+        for (int i = 0; i < Outline.Count; i++)
         {
             var aX = Alphas[i].x;
             var aY = Alphas[i].y;
@@ -84,10 +107,9 @@ public class Panel : MonoBehaviour
             var y = Outline[i].y + dY;
             destVertices.Add(new Vector2(x, y));
         }
-        
     }
     
-    public void OnInit(Package package)
+    /*public void OnInit(Package package)
     {
         mPackage = package;
         InitShape();
@@ -99,7 +121,7 @@ public class Panel : MonoBehaviour
         BorderRect = new Rect(DimRect);
 
         Alphas = CalcAlphaFactor(DimRect);
-    }
+    }*/
 
     public void InitShape()
     {
@@ -108,6 +130,17 @@ public class Panel : MonoBehaviour
 
         Outline = Shape.OutlinePoints.Select(p => (Vector2)p.Position).ToList();
         Bleedline = CGAlgorithm.ScalePoly(Outline, 0.03f);
+    }
+
+    public void InitDimension(Rect rect)
+    {
+        DimRect = new Rect(rect);
+        DimPoints = new List<Vector2>(DimRect.Vector2Array());
+
+        BorderRect = new Rect(rect);
+        BorderPoints = new List<Vector3>(BorderRect.Vector3Array());
+        
+        Alphas = CalcAlphaFactor(DimRect);
     }
 
     List<Vector2> Alphas { set; get; }
