@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 
-public static class _Extensions {
+public static class _RectExtensions {
     public static Vector2[] Vector2Array(this Rect rect)
     {
         return new Vector2[]{
