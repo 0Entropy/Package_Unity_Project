@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Geometry;
 
-[CustomEditor(typeof(PanelImporter))]
+[CustomEditor(typeof(Panel))]
 public class PanelEditor : Editor
 {
 
@@ -24,15 +24,15 @@ public class PanelEditor : Editor
 
         if (keyPoints == null)
         {
-            
-            keyPoints = new List<Vector3>(ImPanel.BorderPoints);
+
+            keyPoints = new List<Vector3>(mPanel.BorderPoints);
             //Debug.Log("Border Rect Center : " + ImPanel.BorderRect.center.ToString());
             //var dimension = ImPanel.DimensionArray;
-            AlignPoints.AddRange(ImPanel.Outline);
-            AlignPoints.AddRange(ImPanel.DimPoints);
+            AlignPoints.AddRange(mPanel.Outline);
+            AlignPoints.AddRange(mPanel.DimPoints);
         }
 
-        Handles.matrix = ImPanel.transform.localToWorldMatrix;
+        Handles.matrix = mPanel.transform.localToWorldMatrix;
 
         //Handles.Label(ImPanel.DimRect.center, ImPanel.Col + ", " + ImPanel.Row);
 
@@ -42,9 +42,23 @@ public class PanelEditor : Editor
 
         DrawBorderLabel();
 
-        
 
-        DrawLine(ImPanel.DimPoints, new Color(1, 0, 0), 4);
+
+        DrawLine(mPanel.DimPoints, new Color(1, 0, 0), 4);
+
+        foreach (Transform child in mPanel.mPackage.transform)
+        {
+            var childPanel = child.GetComponent<Panel>();
+            if (childPanel != mPanel)
+            {
+                DrawLine(childPanel.destVertices, new Color(0, 1, 0), 4);
+            }
+            else
+            {
+                DrawLine(childPanel.destVertices, new Color(0, 1, 0));
+            }
+        }
+
 
         for (int i = 0; i < keyPoints.Count; i++)
         {
@@ -77,11 +91,11 @@ public class PanelEditor : Editor
         EditorGUIUtility.AddCursorRect(new Rect(0, 0, Camera.current.pixelWidth, Camera.current.pixelHeight), mouseCursor);
         mouseCursor = MouseCursor.Arrow;
 
-        worldToLocal = ImPanel.transform.worldToLocalMatrix;
-        inverseRotation = Quaternion.Inverse(ImPanel.transform.rotation) * Camera.current.transform.rotation;
+        worldToLocal = mPanel.transform.worldToLocalMatrix;
+        inverseRotation = Quaternion.Inverse(mPanel.transform.rotation) * Camera.current.transform.rotation;
 
         screenMousePosition = new Vector3(e.mousePosition.x, Camera.current.pixelHeight - e.mousePosition.y);
-        var plane = new Plane(-ImPanel.transform.forward, ImPanel.transform.position);
+        var plane = new Plane(-mPanel.transform.forward, mPanel.transform.position);
         var ray = Camera.current.ScreenPointToRay(screenMousePosition);
         float hit;
         if (plane.Raycast(ray, out hit))
@@ -118,7 +132,7 @@ public class PanelEditor : Editor
                 break;
         }
         //Debug.Log("state : " + state.ToString());
-        
+
     }
 
     State UpdateState()
@@ -137,20 +151,20 @@ public class PanelEditor : Editor
                 if (TryStopDrag())
                     return State.Hover;
                 break;
-                
+
         }
         return state;
     }
 
-    public PanelImporter ImPanel
+    public Panel mPanel
     {
         get
         {
-            return (PanelImporter)target;
+            return (Panel)target;
         }
     }
 
- 
+
     const float clickRadius = 0.08f;
 
     List<Vector3> keyPoints;
@@ -170,7 +184,7 @@ public class PanelEditor : Editor
 
     MouseCursor mouseCursor;
 
-    bool autoSnap = true;
+    //bool autoSnap = true;
 
     Event e
     {
@@ -179,29 +193,34 @@ public class PanelEditor : Editor
 
     void DrawBorderLabel()
     {
-        var cX = ImPanel.DimRect.center.x;
-        var cY = ImPanel.DimRect.center.y;
-        var iX = ImPanel.DimRect.xMin;
-        var aX = ImPanel.DimRect.xMax;
-        var iY = ImPanel.DimRect.yMin;
-        var aY = ImPanel.DimRect.yMax;
+        var cX = mPanel.DimRect.center.x;
+        var cY = mPanel.DimRect.center.y;
+        var iX = mPanel.DimRect.xMin;
+        var aX = mPanel.DimRect.xMax;
+        var iY = mPanel.DimRect.yMin;
+        var aY = mPanel.DimRect.yMax;
 
-        var offset = HandleUtility.GetHandleSize(ImPanel.DimRect.center) * 0.2F;
+        var offset = HandleUtility.GetHandleSize(mPanel.DimRect.center) * 0.2F;
 
-        Handles.Label(new Vector3(iX, cY, 0) + Vector3.right * offset, "R: \n" + ImPanel.Right);
-        Handles.Label(new Vector3(aX, cY, 0) + Vector3.right * offset, "L: \n" + ImPanel.Left);
-        Handles.Label(new Vector3(cX, iY, 0) + Vector3.up * offset, "B: \n" + ImPanel.Bottom);
-        Handles.Label(new Vector3(cX, aY, 0) + Vector3.up * offset, "T: \n" + ImPanel.Top);
+        Handles.Label(new Vector3(iX, cY, 0) + Vector3.right * offset, "R: \n" + mPanel.Right);
+        Handles.Label(new Vector3(aX, cY, 0) + Vector3.right * offset, "L: \n" + mPanel.Left);
+        Handles.Label(new Vector3(cX, iY, 0) + Vector3.up * offset, "B: \n" + mPanel.Bottom);
+        Handles.Label(new Vector3(cX, aY, 0) + Vector3.up * offset, "T: \n" + mPanel.Top);
     }
 
     void DrawOffsetLabel()
     {
-        var offset = HandleUtility.GetHandleSize(ImPanel.DimRect.center) * 0.5F;
-        Handles.Label(ImPanel.DimRect.center + Vector2.right * offset, "min : " + ImPanel.offsetMin.ToString() + "\nmax : " + ImPanel.offsetMax.ToString());
+        var offset = HandleUtility.GetHandleSize(mPanel.DimRect.center) * 0.5F;
+        Handles.Label(mPanel.DimRect.center + Vector2.right * offset, "min : " + mPanel.OffsetMin.ToString() + "\nmax : " + mPanel.OffsetMax.ToString());
     }
 
     void DrawLine(IEnumerable<Vector2> points, Color32 color, float DottedSpaceSize = 0)
     {
+
+        if (points == null || points.Count() == 0)
+
+            return;
+
         Handles.color = color;
 
         var current = points.Last();
@@ -318,7 +337,7 @@ public class PanelEditor : Editor
         if (e.type == EventType.MouseDown && IsSegmentHovering(index))
         {
             clickPosition = mousePosition;
-            
+
             return true;
         }
         return false;
@@ -338,10 +357,12 @@ public class PanelEditor : Editor
 
     private void UpdateBorder()
     {
-        for (int i = 0; i < keyPoints.Count; i++)
+        /*for (int i = 0; i < keyPoints.Count; i++)
         {
             ImPanel.BorderPoints[i] = keyPoints[i];
-        }
+        }*/
+        //ImPanel.CalcAlphaFactor();
+        mPanel.UpdateBorder(keyPoints);
     }
 
     void MoveSegment(int index, Vector3 from, Vector3 to)
@@ -351,9 +372,9 @@ public class PanelEditor : Editor
         var delta = to - from;
         if (index % 2 != 0)
         {
-            foreach(var p in AlignPoints)
+            foreach (var p in AlignPoints)
             {
-                if(Math.Abs(p.y - to.y) < HandleUtility.GetHandleSize(p) * 0.2F)
+                if (Math.Abs(p.y - to.y) < HandleUtility.GetHandleSize(p) * 0.2F)
                 {
                     //delta.y = p.y - mousePosition.y;
                     keyPoints[index] = new Vector3(keyPoints[index].x, p.y, 0);
@@ -378,11 +399,11 @@ public class PanelEditor : Editor
             delta.y = 0;
         }
 
-        keyPoints[index] = ImPanel.BorderPoints[index] + delta;
-        keyPoints[next] = ImPanel.BorderPoints[next] + delta;
+        keyPoints[index] = mPanel.BorderPoints[index] + delta;
+        keyPoints[next] = mPanel.BorderPoints[next] + delta;
 
     }
 
 
-    
+
 }

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using Geometry;
 
-[CustomEditor(typeof(PackageImporter))]
+[CustomEditor(typeof(Package))]
 public class PackageEditor : Editor
 {
 
@@ -15,125 +15,37 @@ public class PackageEditor : Editor
         if (target == null)
             return;
 
-        if (GUILayout.Button("Initial"))
-        {
-
-        }
-
-       /* if (GUILayout.Button("Reset"))
-        {
-
-            / *Debug.Log(ImPackage.Shape);
-            
-            var shape = ImPackage.Shape;* /
-
-            ImPackage.ResetShape();
-            ImPackage.ResetDimension();
-
-            foreach (var panel in ImPackage.GetComponentsInChildren<PanelImporter>())
-            {
-                panel.ResetShape();
-            }
-
-            foreach (var p in ImPackage.Dimensions[0].Vertices)
-            {
-                Debug.Log(p);
-            }
-
-            DrawKeyPoints();
-
-            //imPackage.Shape.LogOutline();
-        }*/
-
-        if(initinalSettings = EditorGUILayout.Foldout(initinalSettings, "On Initial"))
-        {
-           /* var meshObj = (GameObject)EditorGUILayout.ObjectField("Mesh Prefab", ImPackage.InitMesh, typeof(GameObject));
-            var initDim = EditorGUILayout.Vector3Field("Initial Dimension :", ImPackage.InitDim);
-
-
-
-            if (GUI.changed)
-            {
-                ImPackage.InitDim = initDim;
-                ImPackage.InitMesh = meshObj;
-            }
-
-            if (GUILayout.Button("Initial"))
-            {
-                ImPackage.InitDim = initDim;
-                ImPackage.InitMesh = meshObj;
-                ImPackage.OnInit();
-            }*/
-        }
-
-        if (dimensionSettings = EditorGUILayout.Foldout(dimensionSettings, "Dimension (mm)"))
-        {
-            /*var dimension = string.Format("Length : {0}, Width : {1}, Depth : {2}, Thickness : {3}",
-                ImPackage.Length, ImPackage.Width, ImPackage.Depth, ImPackage.Thickness);*/
-
-            /*var whatever = EditorGUILayout.TextArea(dimension);
-            var whatever_0 = EditorGUILayout.TextField(whatever);*/
-
-            //var dimension = EditorGUILayout.Vector3Field("Dimension", ImPackage.Dimension);
-            var length = EditorGUILayout.FloatField("L", ImPackage.Length);///.Dimension.x);
-            var width = EditorGUILayout.FloatField("W", ImPackage.Width);//.Dimension.z);
-            var depth = EditorGUILayout.FloatField("D", ImPackage.Depth);//.Dimension.y);
-
-            //var offset = EditorGUILayout.Vector2Field("Offset", ImPackage.Offset);
-
-            if (GUI.changed)
-            {
-                //ImPackage.Dimension = new Vector3(length, depth, width);
-                ImPackage.Length = length;
-                ImPackage.Width = width;
-                ImPackage.Depth = depth;
-                //ImPackage.Offset = offset;
-                
-            }
-        }
+        
     }
 
     void OnSceneGUI()
     {
         if (target == null)
             return;
-
-        //Debug.Log("Package Outline Point count : " + imPackage.Shape.OutlinePoints.Count);
-
-        //Load handle matrix
-        Handles.matrix = ImPackage.transform.localToWorldMatrix;
+        
+        Handles.matrix = mPackage.transform.localToWorldMatrix;
 
         Handles.color = Color.white;
 
         //DrawKeyPoints();
 
-        DrawLine(ImPackage.Outline, new Color(0, 0.5f, 0.8f));
+        //DrawLine(ImPackage.Outline, new Color(0, 0.5f, 0.8f));
 
-        DrawLine(ImPackage.Bleedline, new Color(0.0f, 0.4f, 0.6f));
+        DrawLine(mPackage.Bleedline, new Color(0.0f, 0.4f, 0.6f));
 
-        //DrawLine(ImPackage.Dimensions[0].Vertices, Color.red);
-        /*foreach (var dimen in ImPackage.Dimensions)
+        foreach (Transform child in mPackage.transform)
         {
-            DrawLine(dimen.Vertices, new Color(1, 0, 0));
-        }*/
+            var childPanel = child.GetComponent<Panel>();
+            DrawLine(childPanel.destVertices, new Color(0, 1, 0), 4);
+        }
 
-        //DrawBleedLine();
-
-        /*Debug.Log(imPackage.Shape.AllPoints[11]);
-        Debug.Log(imPackage.Shape.AllPoints[12]);*/
-
-        /*foreach (var e in imPackage.Shape.AllEdges)
-        {
-            Debug.Log(e);
-        }*/
-
-
+        HandleUtility.Repaint();
 
     }
 
-    PackageImporter ImPackage
+    Package mPackage
     {
-        get { return (PackageImporter)target; }
+        get { return (Package)target; }
     }
 
     static bool initinalSettings
@@ -152,7 +64,7 @@ public class PackageEditor : Editor
     void DrawKeyPoints()
     {
         int i = 0;
-        foreach (var p in ImPackage.Shape.Points)
+        foreach (var p in mPackage.Shape.Points)
         {
             //Handles.DotCap(0, p, Quaternion.identity, HandleUtility.GetHandleSize(p) * 0.03f);
             Handles.Label(p.Position, "" + i++);
@@ -164,7 +76,7 @@ public class PackageEditor : Editor
     void DrawBleedLine()
     {
 
-        var outline = ImPackage.Shape.OutlinePoints.Select(p => (Vector2)p.Position).ToList();
+        var outline = mPackage.Shape.OutlinePoints.Select(p => (Vector2)p.Position).ToList();
         var bleedline = CGAlgorithm.ScalePoly(outline, 0.0125f);
 
         DrawLine(bleedline, Color.blue);
@@ -173,6 +85,9 @@ public class PackageEditor : Editor
 
     void DrawLine(IEnumerable<Vector2> points, Color32 color, float DottedSpaceSize = 0)
     {
+        if (points == null || points.Count() == 0)
+            return;
+
         Handles.color = color;
 
         //var first = points.First();
