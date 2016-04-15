@@ -4,7 +4,7 @@ using System.Collections;
 namespace Geometry
 {
 
-    public static class NewBehaviourScript
+    public static class GeometryExtensions
     {
 
         public static void AddMesh(this Shape2D shape, Mesh mesh)
