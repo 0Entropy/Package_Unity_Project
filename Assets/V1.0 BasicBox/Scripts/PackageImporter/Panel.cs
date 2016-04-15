@@ -8,22 +8,7 @@ using Geometry;
 public class Panel : MonoBehaviour
 {
     public Package mPackage { set; get; }
-
-
-
-    /// <summary>
-    /// Grid_Y Value
-    /// </summary>
-    public int Row;// { set; get; }
-    /// <summary>
-    /// Grid_x Value
-    /// </summary>
-    public int Col;// { set; get; }
-
-    //public float Width { get { return BorderRect.size.x; } }
-    //public float Height { get { return BorderRect.size.y; } }
-
-    //public RectOffset Border { set; get; }
+    
     public float Right { get { return  BorderRect.xMin - DimRect.xMin; } }
     public float Left { get {return DimRect.xMax - BorderRect.xMax; } }
     public float Top { get { return DimRect.yMax - BorderRect.yMax; } }
@@ -38,7 +23,8 @@ public class Panel : MonoBehaviour
     public List<Vector2> DimPoints { set; get; }
     public List<Vector3> BorderPoints { set; get; }
 
-    private Shape2D Shape { set; get; }
+    //private Shape2D Shape { set; get; }
+    public Face2D Face { set; get; }
 
     public List<Vector2> Outline { set; get; }
 
@@ -65,27 +51,12 @@ public class Panel : MonoBehaviour
         }
     }
 
-    public Vector2 OffsetMin, OffsetMax;
-    public List<Vector2> destVertices = new List<Vector2>();
+    public List<Vector2> Alphas { set; get; }
 
-    /*public void OnResize()
-    {
-        ///var destRect = ImPackage.GetRectByRowAndCol(Row, Col);
-        
-        mPackage.GetRectTransformByRowAndCol(Row, Col, ref OffsetMin, ref OffsetMax);
-        destVertices.Clear();
-        for(int i=0; i<Outline.Count; i++)
-        {
-            var aX = Alphas[i].x;
-            var aY = Alphas[i].y;
-            var dX = OffsetMin.x * (1.0f - aX) + OffsetMax.x * aX;
-            var dY = OffsetMin.y * (1.0f - aY) + OffsetMax.y * aY;
-            var x = Outline[i].x + dX;
-            var y = Outline[i].y + dY;
-            destVertices.Add(new Vector2(x, y));
-        }
-        
-    }*/
+    public Vector2 OffsetMin, OffsetMax;
+
+    public List<Vector2> destVertices = new List<Vector2>();
+    
     public void OnResize()
     {
         OnResize(OffsetMin, OffsetMax);
@@ -97,6 +68,7 @@ public class Panel : MonoBehaviour
         OffsetMax = offsetMax;
 
         destVertices.Clear();
+
         for (int i = 0; i < Outline.Count; i++)
         {
             var aX = Alphas[i].x;
@@ -108,24 +80,10 @@ public class Panel : MonoBehaviour
             destVertices.Add(new Vector2(x, y));
         }
     }
-    
-    /*public void OnInit(Package package)
-    {
-        mPackage = package;
-        InitShape();
-
-        DimRect = package.GetDimVertices(Center, ref Row, ref Col);
-        DimPoints = new List<Vector2>(DimRect.Vector2Array());
-
-        BorderPoints = new List<Vector3>(DimRect.Vector3Array());
-        BorderRect = new Rect(DimRect);
-
-        Alphas = CalcAlphaFactor(DimRect);
-    }*/
 
     public void InitShape()
     {
-        Shape = new Shape2D();
+        var Shape = new Shape2D();
         Shape.AddMesh(GetComponent<MeshFilter>().sharedMesh);
 
         Outline = Shape.OutlinePoints.Select(p => (Vector2)p.Position).ToList();
@@ -142,8 +100,6 @@ public class Panel : MonoBehaviour
         
         Alphas = CalcAlphaFactor(DimRect);
     }
-
-    List<Vector2> Alphas { set; get; }
 
     List<Vector2> CalcAlphaFactor(Rect BorderRect)
     {

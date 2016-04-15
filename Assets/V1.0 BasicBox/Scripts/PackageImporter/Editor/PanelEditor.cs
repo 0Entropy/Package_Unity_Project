@@ -24,8 +24,8 @@ public class PanelEditor : Editor
 
         if (keyPoints == null)
         {
-
             keyPoints = new List<Vector3>(mPanel.BorderPoints);
+
             //Debug.Log("Border Rect Center : " + ImPanel.BorderRect.center.ToString());
             //var dimension = ImPanel.DimensionArray;
             AlignPoints.AddRange(mPanel.Outline);
@@ -44,18 +44,18 @@ public class PanelEditor : Editor
 
 
 
-        DrawLine(mPanel.DimPoints, new Color(1, 0, 0), 4);
+        _HandlesHelper.DrawLine(mPanel.DimPoints, new Color(1, 0, 0), 4);
 
         foreach (Transform child in mPanel.mPackage.transform)
         {
             var childPanel = child.GetComponent<Panel>();
             if (childPanel != mPanel)
             {
-                DrawLine(childPanel.destVertices, new Color(0, 1, 0), 4);
+                _HandlesHelper.DrawLine(childPanel.destVertices, new Color(0, 1, 0), 4);
             }
             else
             {
-                DrawLine(childPanel.destVertices, new Color(0, 1, 0));
+                _HandlesHelper.DrawLine(childPanel.destVertices, new Color(0, 1, 0));
             }
         }
 
@@ -113,6 +113,7 @@ public class PanelEditor : Editor
         var newState = UpdateState();
         if (state != newState)
             SetState(newState);
+
         HandleUtility.Repaint();
 
         /*e.Use();*/
@@ -213,34 +214,7 @@ public class PanelEditor : Editor
         var offset = HandleUtility.GetHandleSize(mPanel.DimRect.center) * 0.5F;
         Handles.Label(mPanel.DimRect.center + Vector2.right * offset, "min : " + mPanel.OffsetMin.ToString() + "\nmax : " + mPanel.OffsetMax.ToString());
     }
-
-    void DrawLine(IEnumerable<Vector2> points, Color32 color, float DottedSpaceSize = 0)
-    {
-
-        if (points == null || points.Count() == 0)
-
-            return;
-
-        Handles.color = color;
-
-        var current = points.Last();
-
-        foreach (var next in points)
-        {
-            if (DottedSpaceSize > 0)
-                Handles.DrawDottedLine(current, next, DottedSpaceSize);
-            else
-                Handles.DrawLine(current, next);
-
-            current = next;
-        }
-    }
-
-    void DrawCircle(Vector3 position, float size)
-    {
-        Handles.CircleCap(0, position, inverseRotation, HandleUtility.GetHandleSize(position) * size);
-    }
-
+    
     void DrawSegment(int index)
     {
         var from = keyPoints[index];
@@ -289,23 +263,14 @@ public class PanelEditor : Editor
 
     bool TryHoverSegment(out int index)
     {
-        if (TryHover(keyPoints, Color.white, out index))
-        {
-            mouseCursor = MouseCursor.MoveArrow;
-            return true;
-        }
-        return false;
-    }
-
-    bool TryHover(List<Vector3> points, Color color, out int index)
-    {
         if (Tools.current == Tool.Move)
         {
             index = NearestLine(out nearestPosition);
             if (index >= 0 && IsSegmentHovering(index))
             {
-                Handles.color = color;
-                DrawCircle(nearestPosition, clickRadius);
+                Handles.color = Color.white;
+                //DrawCircle(nearestPosition, clickRadius);
+                _HandlesHelper.DrawCircle(nearestPosition);
                 return true;
             }
 
@@ -313,6 +278,24 @@ public class PanelEditor : Editor
         index = -1;
         return false;
     }
+
+    /*bool TryHover(List<Vector3> points, Color color, out int index)
+    {
+        if (Tools.current == Tool.Move)
+        {
+            index = NearestLine(out nearestPosition);
+            if (index >= 0 && IsSegmentHovering(index))
+            {
+                Handles.color = color;
+                //DrawCircle(nearestPosition, clickRadius);
+                _HandlesHelper.DrawCircle(nearestPosition);
+                return true;
+            }
+
+        }
+        index = -1;
+        return false;
+    }*/
 
     bool IsSegmentHovering(int index)//(Vector3 position)
     {
@@ -376,7 +359,7 @@ public class PanelEditor : Editor
             {
                 if (Math.Abs(p.y - to.y) < HandleUtility.GetHandleSize(p) * 0.2F)
                 {
-                    //delta.y = p.y - mousePosition.y;
+                    //delta.y = p.y - mousePosition.y;      
                     keyPoints[index] = new Vector3(keyPoints[index].x, p.y, 0);
                     keyPoints[next] = new Vector3(keyPoints[next].x, p.y, 0);
                     return;
