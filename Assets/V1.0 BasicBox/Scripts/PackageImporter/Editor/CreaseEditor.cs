@@ -9,7 +9,7 @@ public class CreaseEditor : Editor
 
     //public List<Vector3> keyPoints;
     public List<List<Vector3>> Segments;
-
+    public List<float> Angles;
     Matrix4x4 worldToLocal;
     //Quaternion inverseRotation;
 
@@ -30,6 +30,19 @@ public class CreaseEditor : Editor
 
         EditorGUILayout.LabelField(mCrease.GetType().ToString());
         EditorGUILayout.LabelField(mPackage.GetType().ToString());
+
+        //EditorGUILayout.BeginVertical();
+        selectedIndices.Sort();
+        foreach(var index in selectedIndices)
+        {
+            //EditorGUILayout.BeginHorizontal();
+            //EditorGUILayout.LabelField(index.ToString(), EditorStyles.boldLabel, GUILayout.MaxWidth(80));
+
+            Angles[index] = EditorGUILayout.FloatField( index.ToString(), Angles[index], GUILayout.MinWidth(100));
+            //EditorGUILayout.EndHorizontal();
+
+        }
+        //.EndVertical();
     }
 
     void OnSceneGUI()
@@ -39,8 +52,10 @@ public class CreaseEditor : Editor
 
         if (Segments == null)
         {
-            Segments = mPackage.Shape.Edges.FindAll(e => e.Faces.Count == 2).Distinct().Select(e => e.Points.Select(p => p.Position).ToList()).ToList();
-            Debug.Log("Segments Count : " + Segments.Count);
+            //Segments = mPackage.Shape.Edges.FindAll(e => e.Faces.Count == 2).Distinct().Select(e => e.Points.Select(p => p.Position).ToList()).ToList();
+            //Debug.Log("Segments Count : " + Segments.Count);
+            Segments = new List<List<Vector3>>(mCrease.Segments);
+            Angles = new List<float>(mCrease.Angles);
         }
 
         Handles.matrix = mCrease.transform.localToWorldMatrix;
@@ -55,11 +70,21 @@ public class CreaseEditor : Editor
             _HandlesHelper.DrawLine(line.Select(p => (Vector2)p), new Color(1, 0, 0));
         }
 
-        if (selectedSegmentIndex > 0)
+        for (int i = 0; i < Segments.Count; i++)
         {
-            for (int i = 0; i < Segments[selectedSegmentIndex].Count; i++)
+            /*foreach (var p in Segments[selectedSegmentIndex])
             {
-                foreach (var p in Segments[selectedSegmentIndex])
+
+                Handles.color = Color.green;
+                Handles.DotCap(0, p, Quaternion.identity, HandleUtility.GetHandleSize(p) * 0.03f);
+                //Handles.color = Color.green;
+                //_HandlesHelper.DrawCircle(Segments[selectedSegmentIndex][i], 0.08f);
+
+            }*/
+            if (selectedIndices.Contains(i))
+            {
+
+                foreach (var p in Segments[i])
                 {
 
                     Handles.color = Color.green;
@@ -96,6 +121,7 @@ public class CreaseEditor : Editor
             new Vector3(
                 Event.current.mousePosition.x,
             Camera.current.pixelHeight - Event.current.mousePosition.y);
+
         var plane = new Plane(-mCrease.transform.forward, mCrease.transform.position);
         var ray = Camera.current.ScreenPointToRay(screenMousePosition);
         float hit;
@@ -105,7 +131,7 @@ public class CreaseEditor : Editor
             return;
 
         //Update nearest line and nearest position
-        nearestIndex = NearestLine(out nearestPosition);
+        //nearestIndex = NearestLine(out nearestPosition);
 
 
         var newState = UpdateState();
@@ -120,7 +146,7 @@ public class CreaseEditor : Editor
 
     int dragIndex;
 
-    enum State { Hover, Drag, BoxSelect }//, DragSelected, RotateSelected, ScaleSelected, Extrude }
+    enum State { Hover, Drag, BoxSelect, TapSelect }//, DragSelected, RotateSelected, ScaleSelected, Extrude }
 
     State state;
 
@@ -139,18 +165,32 @@ public class CreaseEditor : Editor
 
     State UpdateState()
     {
+        Event e = Event.current;
+        var controlID = GUIUtility.GetControlID(FocusType.Passive);
         switch (state)
         {
             case State.Hover:
 
-                if (TryHoverSegment(out dragIndex) && TryDragSegment(dragIndex))
-                    return State.Drag;
+                if (TryDeleteSelected())
+                {
+                    Debug.Log("Try Delete Selected.");
+                    return State.Hover;
+                }
+
+                /*if (TryHoverSegment(out dragIndex) && TryDragSegment(dragIndex))
+                    return State.Drag;*/
+
+                if (TryHoverSegment(out dragIndex) && TryTapSelect(dragIndex))
+                    return State.TapSelect;
 
                 if (TryBoxSelect())
                     return State.BoxSelect;
 
                 break;
-
+            case State.TapSelect:
+                if (TryTapSelectEnd())
+                    return State.Hover;
+                break;
             case State.Drag:
                 //mouseCursor = MouseCursor.MoveArrow;
                 MoveSegment(dragIndex, clickPosition, mousePosition);
@@ -167,9 +207,38 @@ public class CreaseEditor : Editor
     }
     #endregion
 
+    #region
+    bool TryTapSelect(int index)
+    {
+        Event e = Event.current;
+        if(e.type == EventType.mouseDown && IsSegmentHovering(index))
+        {
+            if (!control)
+            {
+                selectedIndices.Clear();
+            }
+            selectedIndices.Add(index);
+            return true;
+        }
+        return false;
+    }
+
+    bool TryTapSelectEnd()
+    {
+        Event e = Event.current;
+        if (e.type == EventType.mouseUp)
+        {
+            //selectedIndices.Add(index);
+            return true;
+        }
+        return false;
+    }
+    #endregion
+
     #region BoxSelect
 
-    int selectedSegmentIndex = -1;
+    //int selectedSegmentIndex = -1;
+    
     List<int> selectedIndices = new List<int>();
 
     bool control
@@ -206,33 +275,42 @@ public class CreaseEditor : Editor
 
             if (!control)
             {
-
                 selectedIndices.Clear();
-                selectedSegmentIndex = -1;
             }
             for (int i = 0; i < Segments.Count; i++)
             {
-
-                bool isContains = false;
-                for (int j = 0; j < Segments[i].Count; j++)
+                if (rect.Contains(Segments[i][0]) && rect.Contains(Segments[i][1]))
                 {
-                    if (rect.Contains(Segments[i][j]))
-                    {
-                        isContains = true;
-                        selectedIndices.Add(i);
-                    }
-                }
-                if (isContains)
-                {
-                    selectedSegmentIndex = i;
-                    
-                    Debug.Log("Selected : " + i + ", Count: " + selectedIndices.Count);
-                    break;
+                    selectedIndices.Add(i);
                 }
 
             }
 
             return true;
+        }
+        return false;
+    }
+
+    bool TryDeleteSelected()
+    {
+        Event e = Event.current;
+
+        if (KeyPressed(KeyCode.Delete))
+        {
+            //Debug.Log(" Try Delete Select Event : " + e);
+
+            if (selectedIndices.Count > 0)
+            {
+
+                selectedIndices.Sort();
+
+                UpdateTarget();
+
+
+
+                selectedIndices.Clear();
+                return true;
+            }
         }
         return false;
     }
@@ -243,7 +321,6 @@ public class CreaseEditor : Editor
     const float clickRadius = 0.08f;
 
     Vector3 nearestPosition;
-
 
     Vector3 clickPosition;
     Vector3 mousePosition;
@@ -260,7 +337,6 @@ public class CreaseEditor : Editor
                 _HandlesHelper.DrawCircle(nearestPosition);
                 return true;
             }
-
         }
         index = -1;
         return false;
@@ -312,20 +388,9 @@ public class CreaseEditor : Editor
     #region Drag
 
 
-    int nearestIndex;
+    //int nearestIndex;
 
     bool TryDragSegment(int index)
-    {
-        if (TryDrag(index))
-        {
-            //clickPosition = mousePosition;
-            return true;
-        }
-        return false;
-    }
-
-
-    bool TryDrag(int index)
     {
         if (Event.current.type == EventType.MouseDown && IsSegmentHovering(index))
         {
@@ -335,7 +400,7 @@ public class CreaseEditor : Editor
         }
         return false;
     }
-
+    
     bool TryStopDrag()
     {
         if (Event.current.type == EventType.MouseUp)
@@ -391,6 +456,25 @@ public class CreaseEditor : Editor
 
     }
     #endregion
+
+    #region Update Data
+    void UpdateTarget()
+    {
+        //mCrease.Segments = new List<List<Vector3>>(Segments);
+        mCrease.RemoveByIndices(selectedIndices);
+        Segments = new List<List<Vector3>>(mCrease.Segments);
+
+
+    }
+    #endregion
+
+    bool KeyPressed(KeyCode key)
+    {
+        var e = Event.current;
+        return e.type == EventType.KeyDown &&
+            e.modifiers == (EventModifiers.Control | EventModifiers.FunctionKey) &&
+            e.keyCode == key;
+    }
 
     public Crease mCrease
     {
