@@ -13,6 +13,7 @@ public class PackageImportWindow : EditorWindow
     GameObject srcMeshObj;
 
     Package mPackage;
+    Crease mCrease;
     float Length = 1.2f;
     float Width = 1.0f;
     float Depth = 2.0f;
@@ -40,7 +41,7 @@ public class PackageImportWindow : EditorWindow
         if (!srcMeshObj)
             return;
 
-        Length = EditorGUILayout.FloatField ("Length", Length);///.Dimension.x);
+        Length = EditorGUILayout.FloatField("Length", Length);///.Dimension.x);
         Width = EditorGUILayout.FloatField("Width", Width);//.Dimension.z);
         Depth = EditorGUILayout.FloatField("Depth", Depth);//.Dimension.y);
 
@@ -55,7 +56,7 @@ public class PackageImportWindow : EditorWindow
         if (!mPackage)
             return;
 
-        
+
 
         GUILayout.Space(8);
         GUILayout.Label("Resize Settings", EditorStyles.boldLabel);
@@ -68,6 +69,17 @@ public class PackageImportWindow : EditorWindow
         {
             OnResize(destLength, destWidth, destDepth);
         }
+
+        if (GUILayout.Button("Save"))
+        {
+            string path = EditorUtility.SaveFilePanel("Save Resource", "", "New Resource", "unity3d");
+            if (path.Length != 0)
+            {
+
+            }
+        }
+
+
         packageID = EditorGUILayout.TextField("Package ID", srcMeshObj.name);
 
         groupEnabled = EditorGUILayout.BeginToggleGroup("Optional Settings", groupEnabled);
@@ -86,6 +98,9 @@ public class PackageImportWindow : EditorWindow
 
         mPackage = obj.AddComponent<Package>();
         mPackage.OnInit(Length, Width, Depth);
+
+        mCrease = obj.AddComponent<Crease>();
+        mCrease.OnInit();
     }
 
     void OnResize(float Length, float Width, float Depth)
