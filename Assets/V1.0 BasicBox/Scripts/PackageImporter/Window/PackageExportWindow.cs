@@ -2,7 +2,7 @@
 using UnityEditor;
 using System.Collections;
 
-public class PackageImportWindow : EditorWindow
+public class PackageExportWindow : EditorWindow
 {
     string packageID = string.Empty;
     string packageName = string.Empty;
@@ -23,11 +23,11 @@ public class PackageImportWindow : EditorWindow
     float destDepth = 2.0f;
 
     // Add menu named "My Window" to the Window menu
-    [MenuItem("Window/Package Import Window")]
+    [MenuItem("Window/Package Export Window")]
     static void Init()
     {
         // Get existing open window or if none, make a new one:
-        PackageImportWindow window = (PackageImportWindow)EditorWindow.GetWindow(typeof(PackageImportWindow));
+        PackageExportWindow window = (PackageExportWindow)EditorWindow.GetWindow(typeof(PackageExportWindow));
         window.Show();
     }
 
@@ -72,10 +72,13 @@ public class PackageImportWindow : EditorWindow
 
         if (GUILayout.Button("Save"))
         {
-            string path = EditorUtility.SaveFilePanel("Save Resource", "", "New Resource", "unity3d");
+            string path = EditorUtility.SaveFilePanel("Save Package Data", "", srcMeshObj.name, "xml");
             if (path.Length != 0)
             {
-
+                var creaseData = mCrease.Data;
+                var data = JsonFx.Json.JsonWriter.Serialize(mPackage.Data);
+                _InternalDataCodec.SaveString(data, path);
+                Debug.Log(path);
             }
         }
 
