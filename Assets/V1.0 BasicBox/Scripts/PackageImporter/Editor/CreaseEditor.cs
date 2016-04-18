@@ -93,6 +93,7 @@ public class CreaseEditor : Editor
                     //_HandlesHelper.DrawCircle(Segments[selectedSegmentIndex][i], 0.08f);
 
                 }
+                
             }
         }
 
@@ -207,7 +208,7 @@ public class CreaseEditor : Editor
     }
     #endregion
 
-    #region
+    #region Tap Select
     bool TryTapSelect(int index)
     {
         Event e = Event.current;
@@ -229,6 +230,7 @@ public class CreaseEditor : Editor
         if (e.type == EventType.mouseUp)
         {
             //selectedIndices.Add(index);
+            Repaint();
             return true;
         }
         return false;
@@ -285,7 +287,7 @@ public class CreaseEditor : Editor
                 }
 
             }
-
+            Repaint();
             return true;
         }
         return false;

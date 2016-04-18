@@ -39,15 +39,15 @@ public class PackageEditor : Editor
             _HandlesHelper.DrawLine(childPanel.destVertices, new Color(0, 1, 0), 4);
         }
 
-        /*for (int row = -1; row <= 2; row++)
+        for (int row = -2; row <= 2; row++)
         {
             for (int col = -3; col <= 3; col++)
             {
                 var rect = mPackage.SrcCarMatrix[row, col];
                 _HandlesHelper.DrawLine(rect.Vector2Array(), new Color(0, 1, 0), 4);
-                Handles.Label(rect.center, "[" + row + ", " + col + "]\n" + rect.ToString());
+                Handles.Label(rect.center, "[" + row + ", " + col + "]\n");// + rect.ToString());
             }
-        }*/
+        }
 
         /*foreach(var face in mPackage.Shape.Faces)
         {

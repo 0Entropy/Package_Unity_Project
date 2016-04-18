@@ -6,11 +6,35 @@ using Geometry;
 public class Crease : MonoBehaviour
 {
 
+    public List<Edge2D> Edges { set; get; }
     public List<List<Vector3>> Segments { set; get; }
     public List<float> Angles { set; get; }
     //public List<Crease> Creases { set; get; }
+    public List<CreaseData> Data
+    {
+        get
+        {
+            List<CreaseData> data = new List<CreaseData>();
 
-    public List<Edge2D> Edges { set; get; }
+            for(int i =0; i<Edges.Count; i++)
+            {
+                var e = Edges[i];
+                CreaseData creaseData = new CreaseData();
+                creaseData.Vertices = e.Points.Select(p => (SerializableVector3)p.Position).ToList();
+                creaseData.FoldAngle = Angles[i];
+                creaseData.Neighbors = new List<List<int>>();
+                foreach (var f in e.Faces)
+                {
+                    var coor = new List<int>( GetComponent<Package>().LookUpCoordinate(f));
+                    creaseData.Neighbors.Add(coor);
+                    //Debug.Log(string.Format("Coordinate {0}, {1}", coor[0], coor[1]));
+                }
+                data.Add(creaseData);
+            }
+
+            return data;
+        }
+    }
 
     public void OnInit()
     {

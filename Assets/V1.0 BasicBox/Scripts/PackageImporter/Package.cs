@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Geometry;
@@ -6,8 +7,43 @@ using UnityEngine.UI;
 using System.Collections;
 
 //[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
+[Serializable]
 public class Package : MonoBehaviour
 {
+    public PackageData Data
+    {
+        get
+        {
+            PackageData data = new PackageData();
+            data.Length = Length;
+            data.Width = Width;
+            data.Depth = Depth;
+            data.Thickness = Thickness;
+
+            List<PanelData> panels = new List<PanelData>();
+
+            for (int row = -2, i = 0; row <= 2; row++, i++)
+            {
+                for (int col = -3, j = 0; col <= 3; col++, j++)
+                {
+                    //var panel = Panels[row, col];
+                    var panel = LookUp(row, col);
+                    if (panel == null)
+                        continue;
+
+                    panels.Add(panel.Data);
+                }
+            }
+
+            data.Panels = panels;
+            //data.Panels;
+
+            data.Creases = GetComponent<Crease>().Data;
+
+            return data;
+        }
+    }
+
     public Shape2D Shape { set; get; }
 
     public List<Vector2> Outline { set; get; }
@@ -24,11 +60,29 @@ public class Package : MonoBehaviour
     public List<Crease> Creases { set; get; }
 
     //public Panel[,] Panels { set; get; }
-    public CartesianMatrix<Panel> Panels { set; get; }
+    //public CartesianMatrix<Panel> Panels { set; get; }
+
+    public List<Panel> PanelList { set; get; }
 
     public CartesianMatrix<Rect> SrcCarMatrix { set; get; }
 
     public Rect[,] destMatrix { set; get; }
+
+    public int[] LookUpCoordinate(Face2D face)
+    {
+        var panel = PanelList.Find(p => p.Face == face);
+        if (panel == null)
+            throw new System.Exception("The panel is not exact!");
+       
+         return new int[] { panel.Row, panel.Col };
+    }
+
+    public Panel LookUp(int row, int col)
+    {
+
+        return PanelList.Find(p => (p.Row == row && p.Col == col));
+        
+    }
 
     public void OnResize(float length, float width, float depth, float thickness = 0.01f)
     {
@@ -38,7 +92,8 @@ public class Package : MonoBehaviour
         {
             for (int col = -3, j = 0; col <= 3; col++, j++)
             {
-                var panel = Panels[row, col];
+                //var panel = Panels[row, col];
+                var panel = LookUp(row, col);
                 if (panel == null)
                     continue;
 
@@ -68,21 +123,15 @@ public class Package : MonoBehaviour
 
         //srcMatrix = CalcRectMatrix(length, width, depth);
         SrcCarMatrix = CalcCarMatrix(length, width, depth);
-
-        /*var row = -1;
-        for (int col = -3; col <= 3; col++)
-        {
-            var rect = SrcCarMatrix[row, col];
-            SrcCarMatrix[row, col] = Rect.MinMaxRect(rect.xMin, rect.yMin - (rect.width - rect.height), rect.xMax, rect.yMax);
-        }*/
-
-        ///
+        
         destMatrix = CalcRectMatrix(length, width, depth);
     }
 
     void InitShape()
     {
-        Panels = new CartesianMatrix<Panel>(5, 7);
+        //Panels = new CartesianMatrix<Panel>(5, 7);
+        PanelList = new List<Panel>();
+
 
         Shape = new Shape2D();
 
@@ -90,17 +139,12 @@ public class Package : MonoBehaviour
 
         foreach (Transform child in transform)
         {
-            /*var mesh = child.GetComponent<MeshFilter>().sharedMesh;
-            Shape.AddMesh(mesh);*/
-
             var panel = child.GetComponent<Panel>();
             if (!panel)
             {
                 panel = child.gameObject.AddComponent<Panel>();
             }
-
-            //panel.OnInit(this);
-
+            
             panel.InitShape();
             Add(panel);
 
@@ -175,6 +219,8 @@ public class Package : MonoBehaviour
         return result;
     }
 
+
+
     public void Add(Panel panel)
     {
 
@@ -191,7 +237,10 @@ public class Package : MonoBehaviour
                 if (CGAlgorithm.CN_PnPoly(panel.Center, rect.Vector2Array()) == 1)
                 {
                     panel.InitDimension(rect);
-                    Panels[row, col] = panel;
+                    //Panels[row, col] = panel;
+                    panel.Row = row;
+                    panel.Col = col;
+                    PanelList.Add(panel);
                     return;
                 }
             }
@@ -208,21 +257,27 @@ public class Package : MonoBehaviour
 /// <typeparam name="T"></typeparam>
 public class CartesianMatrix<T>
 {
+    /*private int Row;
+    private int Col;*/
     private int offsetRow;// = 2;
     private int offsetCol;//= 3;
 
-    private T[,] mPanels;// = new T[5, 7];
+    public T[,] Array { set; get; }
+
+    /*public List<T> Content { set; get; }*/
 
     public CartesianMatrix(int rowNum, int colNum)
     {
         offsetRow = rowNum / 2;
         offsetCol = colNum / 2;
-        mPanels = new T[rowNum, colNum];
+//         Row = rowNum;
+//         Col = colNum;
+        Array = new T[rowNum, colNum];
     }
 
     public T this[int row, int col]
     {
-        set { mPanels[row + offsetRow, col + offsetCol] = value; }
-        get { return mPanels[row + offsetRow, col + offsetCol]; }
+        set { Array[row + offsetRow, col + offsetCol] = value; }
+        get { return Array[row + offsetRow, col + offsetCol]; }
     }
 }

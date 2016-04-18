@@ -7,16 +7,38 @@ using Geometry;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class Panel : MonoBehaviour
 {
+
+    public PanelData Data
+    {
+        get
+        {
+            PanelData data = new PanelData();
+
+            data.Right = Right;
+            data.Left = Left;
+            data.Top = Top;
+            data.Bottom = Bottom;
+
+            data.Vertices = Outline.Select(p => (SerializableVector3)((Vector3)p)).ToList();
+            data.Alphas = Alphas.Select(a => (SerializableVector2)a).ToList();
+
+            return data;
+        }
+    }
     public Package mPackage { set; get; }
     
+    public int Row { set; get; }
+    public int Col { set; get; }
+
+
     public float Right { get { return  BorderRect.xMin - DimRect.xMin; } }
     public float Left { get {return DimRect.xMax - BorderRect.xMax; } }
     public float Top { get { return DimRect.yMax - BorderRect.yMax; } }
     public float Bottom { get { return BorderRect.yMin - DimRect.yMin; } }
 
-    public List<Vector3> Vertices { set; get; }
+    /*public List<Vector3> Vertices { set; get; }
 
-    public List<CreaseData> Creases { set; get; }
+    public List<CreaseData> Creases { set; get; }*/
 
     public Rect DimRect { set; get; }
     //public Vector2[] DimArray { set; get; }
@@ -99,16 +121,24 @@ public class Panel : MonoBehaviour
         BorderPoints = new List<Vector3>(BorderRect.Vector3Array());
         
         Alphas = CalcAlphaFactor(DimRect);
+        
     }
 
+    /// <summary>
+    /// 不同的Panel，其Alpha计算方法是不同的。
+    /// 下次迭代时，可以做子类区分。
+    /// </summary>
+    /// <param name="BorderRect"></param>
+    /// <returns></returns>
     List<Vector2> CalcAlphaFactor(Rect BorderRect)
     {
         List<Vector2> result = new List<Vector2>();
         //BorderRect = BorderPoints.BorderRect();
         foreach (var p in Outline)
         {
-            var alphaX = Mathf.Clamp((p.x - BorderRect.xMin) / BorderRect.width, 0, 1);
-            var alphaY = Mathf.Clamp((p.y - BorderRect.yMin) / BorderRect.height, 0, 1);
+            var alphaX = BorderRect.width == 0 ? 1 : Mathf.Clamp((p.x - BorderRect.xMin) / BorderRect.width, 0, 1);
+            var alphaY = BorderRect.height == 0 ? 1 : Mathf.Clamp((p.y - BorderRect.yMin) / BorderRect.height, 0, 1);
+            
             result.Add(new Vector2(alphaX, alphaY));
         }
         return result;

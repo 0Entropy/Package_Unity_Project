@@ -25,25 +25,17 @@ public class PanelEditor : Editor
         if (keyPoints == null)
         {
             keyPoints = new List<Vector3>(mPanel.BorderPoints);
-
-            //Debug.Log("Border Rect Center : " + ImPanel.BorderRect.center.ToString());
-            //var dimension = ImPanel.DimensionArray;
+            
             AlignPoints.AddRange(mPanel.Outline);
             AlignPoints.AddRange(mPanel.DimPoints);
         }
 
         Handles.matrix = mPanel.transform.localToWorldMatrix;
-
-        //Handles.Label(ImPanel.DimRect.center, ImPanel.Col + ", " + ImPanel.Row);
-
-        //Handles.Label(ImPanel.DimRect.center + Vector2.up, ImPanel.Left + ", " + ImPanel.Right + ", " + ImPanel.Top + ", " + ImPanel.Bottom);
-
+        
         DrawOffsetLabel();
 
         DrawBorderLabel();
-
-
-
+        
         _HandlesHelper.DrawLine(mPanel.DimPoints, new Color(1, 0, 0), 4);
 
         foreach (Transform child in mPanel.mPackage.transform)
@@ -65,11 +57,7 @@ public class PanelEditor : Editor
             Handles.color = nearestIndex == i ? Color.green : Color.white;
             DrawSegment(i);
         }
-
-        //Handles.DrawSolidRectangleWithOutline(ImPanel.BorderArray, new Color(0.2f, 0.2f, 0.2f, 0.2f), new Color(0.0f, 0.4f, 0.6f));
-
-        //Handles.color = new Color(0, 0.5f, 0.8f);
-
+        
         foreach (var p in keyPoints)
         {
             Handles.color = Color.white;
@@ -79,15 +67,13 @@ public class PanelEditor : Editor
         //Quit if panning or no camera exists
         if (Tools.current == Tool.View || (e.isMouse && e.button > 0) || Camera.current == null || e.type == EventType.ScrollWheel)
             return;
-
-        //Quit if laying out
+        
         if (e.type == EventType.Layout)
         {
             HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
             return;
         }
-
-        //Cursor rectangle
+        
         EditorGUIUtility.AddCursorRect(new Rect(0, 0, Camera.current.pixelWidth, Camera.current.pixelHeight), mouseCursor);
         mouseCursor = MouseCursor.Arrow;
 
@@ -102,14 +88,9 @@ public class PanelEditor : Editor
             mousePosition = worldToLocal.MultiplyPoint(ray.GetPoint(hit));
         else
             return;
-
-        //Update nearest line and nearest position
+        
         nearestIndex = NearestLine(out nearestPosition);
-
-        //var index = -1;
-        //TryHoverSegment(out index);
-
-        //Update the state and repaint
+        
         var newState = UpdateState();
         if (state != newState)
             SetState(newState);
