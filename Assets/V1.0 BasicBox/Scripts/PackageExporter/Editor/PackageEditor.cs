@@ -43,7 +43,7 @@ public class PackageEditor : Editor
         {
             for (int col = -3; col <= 3; col++)
             {
-                var rect = mPackage.SrcCarMatrix[row, col];
+                var rect = mPackage.SrcCartMatrix[row, col];
                 _HandlesHelper.DrawLine(rect.Vector2Array(), new Color(0, 1, 0), 4);
                 Handles.Label(rect.center, "[" + row + ", " + col + "]\n");// + rect.ToString());
             }

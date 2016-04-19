@@ -7,7 +7,6 @@ using UnityEngine.UI;
 using System.Collections;
 
 //[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
-[Serializable]
 public class Package : MonoBehaviour
 {
     public PackageData Data
@@ -19,25 +18,8 @@ public class Package : MonoBehaviour
             data.Width = Width;
             data.Depth = Depth;
             data.Thickness = Thickness;
-
-            List<PanelData> panels = new List<PanelData>();
-
-            for (int row = -2, i = 0; row <= 2; row++, i++)
-            {
-                for (int col = -3, j = 0; col <= 3; col++, j++)
-                {
-                    //var panel = Panels[row, col];
-                    var panel = LookUp(row, col);
-                    if (panel == null)
-                        continue;
-
-                    panels.Add(panel.Data);
-                }
-            }
-
-            data.Panels = panels;
-            //data.Panels;
-
+            data.Panels = Panels.Select(p => p.Data).ToList();
+            
             data.Creases = GetComponent<Crease>().Data;
 
             return data;
@@ -54,23 +36,17 @@ public class Package : MonoBehaviour
     public float Width { set; get; }
     public float Depth { set; get; }
     public float Thickness { set; get; }
-
-    //public Rect[,] srcMatrix { set; get; }
-
+    
     public List<Crease> Creases { set; get; }
+    
+    public List<Panel> Panels { set; get; }
 
-    //public Panel[,] Panels { set; get; }
-    //public CartesianMatrix<Panel> Panels { set; get; }
-
-    public List<Panel> PanelList { set; get; }
-
-    public CartesianMatrix<Rect> SrcCarMatrix { set; get; }
-
-    public Rect[,] destMatrix { set; get; }
-
+    public CartesianMatrix<Rect> SrcCartMatrix { set; get; }
+    public CartesianMatrix<Rect> DestCartMatrix { set; get; }
+    
     public int[] LookUpCoordinate(Face2D face)
     {
-        var panel = PanelList.Find(p => p.Face == face);
+        var panel = Panels.Find(p => p.Face == face);
         if (panel == null)
             throw new System.Exception("The panel is not exact!");
        
@@ -80,29 +56,19 @@ public class Package : MonoBehaviour
     public Panel LookUp(int row, int col)
     {
 
-        return PanelList.Find(p => (p.Row == row && p.Col == col));
+        return Panels.Find(p => (p.Row == row && p.Col == col));
         
     }
 
     public void OnResize(float length, float width, float depth, float thickness = 0.01f)
     {
-        destMatrix = CalcRectMatrix(length, width, depth);
-
-        for (int row = -2, i = 0; row <= 2; row++, i++)
+        //destMatrix = CalcRectMatrix(length, width, depth);
+        DestCartMatrix = CalcCartMatrix(length, width, depth);
+        foreach(var panel in Panels)
         {
-            for (int col = -3, j = 0; col <= 3; col++, j++)
-            {
-                //var panel = Panels[row, col];
-                var panel = LookUp(row, col);
-                if (panel == null)
-                    continue;
-
-                var offsetMin = destMatrix[i, j].min - SrcCarMatrix[row, col].min;//srcMatrix[i, j].min;//
-                var offsetMax = destMatrix[i, j].max - SrcCarMatrix[row, col].max; //srcMatrix[i, j].max;// 
-                panel.OnResize(offsetMin, offsetMax);
-            }
+            panel.UpdateDimension(DestCartMatrix[panel.Row, panel.Col]);
         }
-
+        
     }
 
     public void OnInit(float length, float width, float depth, float thickness = 0.01f)
@@ -120,19 +86,16 @@ public class Package : MonoBehaviour
         Width = width;
         Depth = depth;
         Thickness = thickness;
-
-        //srcMatrix = CalcRectMatrix(length, width, depth);
-        SrcCarMatrix = CalcCarMatrix(length, width, depth);
         
-        destMatrix = CalcRectMatrix(length, width, depth);
+        SrcCartMatrix = CalcCartMatrix(length, width, depth);
+        DestCartMatrix = CalcCartMatrix(length, width, depth);
     }
 
     void InitShape()
     {
-        //Panels = new CartesianMatrix<Panel>(5, 7);
-        PanelList = new List<Panel>();
 
-
+        Panels = new List<Panel>();
+        
         Shape = new Shape2D();
 
         List<List<Vector2>> bleedInChildren = new List<List<Vector2>>();
@@ -156,6 +119,7 @@ public class Package : MonoBehaviour
         Bleedline = PolygonAlgorithm.Merge(bleedInChildren);
     }
 
+/*
     public Rect[,] CalcRectMatrix(float length, float width, float depth)
     {
 
@@ -186,9 +150,9 @@ public class Package : MonoBehaviour
         }
 
         return result;
-    }
+    }*/
 
-    public CartesianMatrix<Rect> CalcCarMatrix(float length, float width, float depth)
+    public CartesianMatrix<Rect> CalcCartMatrix(float length, float width, float depth)
     {
         CartesianMatrix<Rect> result = new CartesianMatrix<Rect>(5, 7);
 
@@ -210,8 +174,7 @@ public class Package : MonoBehaviour
                 var max_x = c_x + w * 0.5f;
                 var min_y = c_y - h * 0.5f;
                 var max_y = c_y + h * 0.5f;
-
-                //result[i, j] = Rect.MinMaxRect(min_x, min_y, max_x, max_y);
+                
                 result[row, col] = new Rect(min_x, min_y, w, h);
             }
         }
@@ -232,7 +195,7 @@ public class Package : MonoBehaviour
             for (int col = -3, j = 0; col <= 3; col++, j++)
             {
                 //var rect = srcMatrix[i, j];
-                var rect = SrcCarMatrix[row, col];
+                var rect = SrcCartMatrix[row, col];
                 //var vertices = rect.Vector2Array();
                 if (CGAlgorithm.CN_PnPoly(panel.Center, rect.Vector2Array()) == 1)
                 {
@@ -240,7 +203,7 @@ public class Package : MonoBehaviour
                     //Panels[row, col] = panel;
                     panel.Row = row;
                     panel.Col = col;
-                    PanelList.Add(panel);
+                    Panels.Add(panel);
                     return;
                 }
             }

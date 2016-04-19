@@ -24,10 +24,10 @@ public class PanelEditor : Editor
 
         if (keyPoints == null)
         {
-            keyPoints = new List<Vector3>(mPanel.BorderPoints);
+            keyPoints = new List<Vector3>(mPanel.ResizableRect.Vector3Array());
             
             AlignPoints.AddRange(mPanel.Outline);
-            AlignPoints.AddRange(mPanel.DimPoints);
+            AlignPoints.AddRange(mPanel.SrcDimRect.Vector2List());
         }
 
         Handles.matrix = mPanel.transform.localToWorldMatrix;
@@ -36,11 +36,11 @@ public class PanelEditor : Editor
 
         DrawBorderLabel();
         
-        _HandlesHelper.DrawLine(mPanel.DimPoints, new Color(1, 0, 0), 4);
+        _HandlesHelper.DrawLine(mPanel.SrcDimRect.Vector2List(), new Color(1, 0, 0), 4);
 
-        foreach (Transform child in mPanel.mPackage.transform)
+        foreach (var childPanel in mPanel.mPackage.Panels)
         {
-            var childPanel = child.GetComponent<Panel>();
+            //var childPanel = child.GetComponent<Panel>();
             if (childPanel != mPanel)
             {
                 _HandlesHelper.DrawLine(childPanel.destVertices, new Color(0, 1, 0), 4);
@@ -175,14 +175,14 @@ public class PanelEditor : Editor
 
     void DrawBorderLabel()
     {
-        var cX = mPanel.DimRect.center.x;
-        var cY = mPanel.DimRect.center.y;
-        var iX = mPanel.DimRect.xMin;
-        var aX = mPanel.DimRect.xMax;
-        var iY = mPanel.DimRect.yMin;
-        var aY = mPanel.DimRect.yMax;
+        var cX = mPanel.SrcDimRect.center.x;
+        var cY = mPanel.SrcDimRect.center.y;
+        var iX = mPanel.SrcDimRect.xMin;
+        var aX = mPanel.SrcDimRect.xMax;
+        var iY = mPanel.SrcDimRect.yMin;
+        var aY = mPanel.SrcDimRect.yMax;
 
-        var offset = HandleUtility.GetHandleSize(mPanel.DimRect.center) * 0.2F;
+        var offset = HandleUtility.GetHandleSize(mPanel.SrcDimRect.center) * 0.2F;
 
         Handles.Label(new Vector3(iX, cY, 0) + Vector3.right * offset, "R: \n" + mPanel.Right);
         Handles.Label(new Vector3(aX, cY, 0) + Vector3.right * offset, "L: \n" + mPanel.Left);
@@ -192,8 +192,8 @@ public class PanelEditor : Editor
 
     void DrawOffsetLabel()
     {
-        var offset = HandleUtility.GetHandleSize(mPanel.DimRect.center) * 0.5F;
-        Handles.Label(mPanel.DimRect.center + Vector2.right * offset, "min : " + mPanel.OffsetMin.ToString() + "\nmax : " + mPanel.OffsetMax.ToString());
+        var offset = HandleUtility.GetHandleSize(mPanel.SrcDimRect.center) * 0.5F;
+        Handles.Label(mPanel.SrcDimRect.center + Vector2.right * offset, "min : " + mPanel.OffsetMin.ToString() + "\nmax : " + mPanel.OffsetMax.ToString());
     }
     
     void DrawSegment(int index)
@@ -363,8 +363,8 @@ public class PanelEditor : Editor
             delta.y = 0;
         }
 
-        keyPoints[index] = mPanel.BorderPoints[index] + delta;
-        keyPoints[next] = mPanel.BorderPoints[next] + delta;
+        keyPoints[index] = mPanel.ResizableRect.Vector3Array()[index] + delta;
+        keyPoints[next] = mPanel.ResizableRect.Vector3Array()[next] + delta;
 
     }
 

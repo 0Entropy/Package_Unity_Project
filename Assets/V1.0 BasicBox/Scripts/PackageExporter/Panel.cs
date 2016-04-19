@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Geometry;
 
-[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
+//[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class Panel : MonoBehaviour
 {
 
@@ -25,37 +25,29 @@ public class Panel : MonoBehaviour
             return data;
         }
     }
+
     public Package mPackage { set; get; }
-    
+
     public int Row { set; get; }
     public int Col { set; get; }
+    
+    public float Right { get { return ResizableRect.xMin - SrcDimRect.xMin; } }
+    public float Left { get { return SrcDimRect.xMax - ResizableRect.xMax; } }
+    public float Top { get { return SrcDimRect.yMax - ResizableRect.yMax; } }
+    public float Bottom { get { return ResizableRect.yMin - SrcDimRect.yMin; } }
+    
+    public Rect SrcDimRect { set; get; }
 
+    public Rect DestDimRect { set; get; }
 
-    public float Right { get { return  BorderRect.xMin - DimRect.xMin; } }
-    public float Left { get {return DimRect.xMax - BorderRect.xMax; } }
-    public float Top { get { return DimRect.yMax - BorderRect.yMax; } }
-    public float Bottom { get { return BorderRect.yMin - DimRect.yMin; } }
-
-    /*public List<Vector3> Vertices { set; get; }
-
-    public List<CreaseData> Creases { set; get; }*/
-
-    public Rect DimRect { set; get; }
-    //public Vector2[] DimArray { set; get; }
-    public List<Vector2> DimPoints { set; get; }
-    public List<Vector3> BorderPoints { set; get; }
-
-    //private Shape2D Shape { set; get; }
+    public Rect ResizableRect { set; get; }
+    
     public Face2D Face { set; get; }
 
     public List<Vector2> Outline { set; get; }
 
     public List<Vector2> Bleedline { set; get; }
 
-    public Rect BorderRect
-    {
-        set; get;
-    }
 
     public Vector2 Center
     {
@@ -78,7 +70,7 @@ public class Panel : MonoBehaviour
     public Vector2 OffsetMin, OffsetMax;
 
     public List<Vector2> destVertices = new List<Vector2>();
-    
+
     public void OnResize()
     {
         OnResize(OffsetMin, OffsetMax);
@@ -109,19 +101,30 @@ public class Panel : MonoBehaviour
         Shape.AddMesh(GetComponent<MeshFilter>().sharedMesh);
 
         Outline = Shape.OutlinePoints.Select(p => (Vector2)p.Position).ToList();
+
+        destVertices = new List<Vector2>(Outline);
+
         Bleedline = CGAlgorithm.ScalePoly(Outline, 0.03f);
     }
 
     public void InitDimension(Rect rect)
     {
-        DimRect = new Rect(rect);
-        DimPoints = new List<Vector2>(DimRect.Vector2Array());
+        SrcDimRect = new Rect(rect);
+        //SrcDimPoints = new List<Vector2>(SrcDimRect.Vector2Array());
 
-        BorderRect = new Rect(rect);
-        BorderPoints = new List<Vector3>(BorderRect.Vector3Array());
-        
-        Alphas = CalcAlphaFactor(DimRect);
-        
+        ResizableRect = new Rect(rect);
+        //BorderPoints = new List<Vector3>(BorderRect.Vector3Array());
+
+        Alphas = CalcAlphaFactor(SrcDimRect);
+
+    }
+
+    public void UpdateDimension(Rect rect)
+    {
+        DestDimRect = new Rect(rect);
+        var offsetMin = DestDimRect.min - SrcDimRect.min;
+        var offsetMax = DestDimRect.max - SrcDimRect.max;
+        OnResize(offsetMin, offsetMax);
     }
 
     /// <summary>
@@ -138,7 +141,7 @@ public class Panel : MonoBehaviour
         {
             var alphaX = BorderRect.width == 0 ? 1 : Mathf.Clamp((p.x - BorderRect.xMin) / BorderRect.width, 0, 1);
             var alphaY = BorderRect.height == 0 ? 1 : Mathf.Clamp((p.y - BorderRect.yMin) / BorderRect.height, 0, 1);
-            
+
             result.Add(new Vector2(alphaX, alphaY));
         }
         return result;
@@ -146,12 +149,9 @@ public class Panel : MonoBehaviour
 
     public void UpdateBorder(List<Vector3> points)
     {
-        for (int i = 0; i < points.Count; i++)
-        {
-            BorderPoints[i] = points[i];
-        }
-        BorderRect = BorderPoints.BorderRect();
-        Alphas = CalcAlphaFactor(BorderRect);
+        
+        ResizableRect = points.BorderRect();
+        Alphas = CalcAlphaFactor(ResizableRect);
         OnResize();
     }
 

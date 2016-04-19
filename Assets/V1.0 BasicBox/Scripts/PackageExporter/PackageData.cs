@@ -16,6 +16,12 @@ public class PackageData
 
     public List<CreaseData> Creases { set; get; }
 
+    public override string ToString()
+    {
+        return string.Format("Dimension : [L:{0}, W:{1}, D:{2}]; Panels:{3}; Creases:{4}",
+            Length, Width, Depth, Panels.Count, Creases.Count);
+    }
+
 }
 
 [Serializable]
@@ -35,11 +41,9 @@ public class PanelData
 [Serializable]
 public class CreaseData
 {
-
-    //public List<int> Indices { set; get; }
+    
     public List<SerializableVector3> Vertices { set; get; }
     public List<List<int>> Neighbors { set; get; }
     public float FoldAngle { set; get; }
     
-
 }
