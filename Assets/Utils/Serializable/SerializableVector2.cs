@@ -72,9 +72,9 @@ public class SerializableVector2
         return new SerializableVector2(d * a.x, d * a.y);
     }
 
-    public static SerializableVector2 operator *(SerializableVector2 a, float d)
+    public static SerializableVector2 operator /(SerializableVector2 a, float d)
     {
-        return new SerializableVector2(d * a.x, d * a.y);
+        return new SerializableVector2(a.x / d,  a.y / d);
     }
 
     public double magnitude

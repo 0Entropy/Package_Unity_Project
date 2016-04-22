@@ -38,6 +38,26 @@ public class SerializableVector3
         z = rZ;
     }
 
+    public static SerializableVector3 operator +(SerializableVector3 a, SerializableVector3 b)
+    {
+        return new SerializableVector3(a.x + b.x, a.y + b.y, a.z + b.z);
+    }
+
+    public static SerializableVector3 operator -(SerializableVector3 a, SerializableVector3 b)
+    {
+        return new SerializableVector3(a.x - b.x, a.y - b.y, a.z - b.z);
+    }
+
+    public static SerializableVector3 operator *(float d, SerializableVector3 a)
+    {
+        return new SerializableVector3(d * a.x, d * a.y, d*a.z);
+    }
+
+    public static SerializableVector3 operator /(SerializableVector3 a, float d)
+    {
+        return new SerializableVector3( a.x / d,  a.y/ d, a.z / d);
+
+    }
     /// <summary>
     /// Returns a string representation of the object
     /// </summary>
