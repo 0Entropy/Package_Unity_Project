@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using Geometry;
+using System;
 
 /// <summary>
 /// It is a basic package class.
 /// </summary>
-public class Box {
+public class Box
+{
     
     public Shape2D Shape { set; get; }
 
@@ -26,30 +28,43 @@ public class Box {
     public CartesianMatrix<Rect> SrcCartMatrix { set; get; }
     public CartesianMatrix<Rect> DestCartMatrix { set; get; }
 
-    public int[] LookUpCoordinate(Face2D shapeFace)
+    /*public int[] LookUpCoordinate(Face2D shapeFace)
     {
         var face = Faces.Find(p => p.ShapeFace == shapeFace);
         if (face == null)
             throw new System.Exception("The panel is not exact!");
 
         return new int[] { face.Row, face.Col };
-    }
+    }*/
 
-    public Face LookUp(int row, int col)
+    /*public Face LookUp(int row, int col)
     {
 
         return Faces.Find(p => (p.Row == row && p.Col == col));
 
+    }*/
+
+    public Face this[int row, int col]
+    {
+        get { return Faces.Find(p => (p.Row == row && p.Col == col)); }
     }
 
     public void OnResize(float length, float width, float depth, float thickness = 0.01f)
     {
 
         DestCartMatrix = CalcCartMatrix(length, width, depth);
+
+        //List<List<Vector2>> bleedInChildren = new List<List<Vector2>>();
         foreach (var face in Faces)
         {
             face.UpdateDimension(DestCartMatrix[face.Row, face.Col]);
+            //bleedInChildren.Add(face.Bleedline);
         }
+
+        Outline = Shape.OutlinePoints.Select(p => (Vector2)p.Position).ToList();
+        //Bleedline = PolygonAlgorithm.Merge(bleedInChildren);
+
+        Bleedline = PolygonAlgorithm.Merge(Faces.Select(f => f.Bleedline).ToList());
 
     }
 
@@ -62,11 +77,69 @@ public class Box {
 
     }*/
 
+     
     #region Generable Box
     public void OnInit(PackageData data)
     {
         InitDimension(data.Length, data.Width, data.Depth, data.Thickness);
-        InitShape(data.Panels);
+        //InitShape(data.Panels);
+        //InitOutline(data.Panels.Select(p => p.Vertices.Select(v => (Vector3)v).ToList()).ToList());
+        InitFaces(data.Panels);
+
+        InitEdges(data.Creases);
+    }
+    
+    #endregion
+
+    #region Face
+
+    public void InitFaces(List<PanelData> datas)
+    {
+        Shape = new Shape2D();
+        Faces = new List<Face>();
+        //List<List<Vector2>> bleedInChildren = new List<List<Vector2>>();
+
+        foreach (var data in datas)
+        {
+            var face = new Face();
+            face.OnInit(data);
+            //Add(face);
+            face.mBox = this;
+            face.ShapeFace = Shape.AddPoints(face.SrcOutline.Select(p => new Point2D(p)).ToArray());
+            
+            Faces.Add(face);
+
+        }
+
+
+        Outline = Shape.OutlinePoints.Select(p => (Vector2)p.Position).ToList();
+        Bleedline = PolygonAlgorithm.Merge(Faces.Select(f => f.Bleedline).ToList());
+    }
+
+    #endregion
+
+    #region Edge
+
+    public bool IsNotBinded { get { return Edges.Any(e => !e.IsBinded); } }
+
+    public List<Edge> Edges;
+    private void InitEdges(List<CreaseData> creases)
+    {
+        Edges = new List<Edge>();
+        foreach (var crease in creases)
+        {
+            var edge = new Edge(crease.Vertices[0], crease.Vertices[1], crease.FoldAngle);
+            foreach (var neighbor in crease.Neighbors)
+            {
+                edge.AddFace(this[neighbor[0], neighbor[1]]);
+            }
+            Edges.Add(edge);
+        }
+    }
+
+    private void UpdateEdges()
+    {
+
     }
 
     #endregion
@@ -82,51 +155,7 @@ public class Box {
         DestCartMatrix = CalcCartMatrix(length, width, depth);
     }
 
-    void InitShape(List<PanelData> panels)
-    {
-
-        Faces = new List<Face>();
-
-        Shape = new Shape2D();
-
-        List<List<Vector2>> bleedInChildren = new List<List<Vector2>>();
-
-        foreach (var panel in panels)
-        {
-            var vertices = panel.Vertices.Select(p => new Vector2(p.x, p.y)).ToList();
-            var face = new Face();
-            face.InitShape(vertices);
-            Add(face);
-
-            bleedInChildren.Add(face.Bleedline);
-
-        }
-        
-        /*foreach (Transform child in transform)
-        {
-            var panel = child.GetComponent<Panel>();
-            if (!panel)
-            {
-                panel = child.gameObject.AddComponent<Panel>();
-            }
-
-            panel.InitShape();
-            Add(panel);
-
-            bleedInChildren.Add(panel.Bleedline);
-
-        }*/
-
-        Outline = Shape.OutlinePoints.Select(p => (Vector2)p.Position).ToList();
-        Bleedline = PolygonAlgorithm.Merge(bleedInChildren);
-    }
-
-    void AddPanels()
-    {
-
-    }
-    
-    public CartesianMatrix<Rect> CalcCartMatrix(float length, float width, float depth)
+    public static CartesianMatrix<Rect> CalcCartMatrix(float length, float width, float depth)
     {
         CartesianMatrix<Rect> result = new CartesianMatrix<Rect>(5, 7);
 
@@ -156,33 +185,5 @@ public class Box {
         return result;
     }
     
-    public void Add(Face face)
-    {
-
-        face.mBox = this;
-        face.ShapeFace = Shape.AddPoints(face.Outline.Select(p => new Point2D(p)).ToArray());
-
-        for (int row = -2, i = 0; row <= 2; row++, i++)
-        {
-            for (int col = -3, j = 0; col <= 3; col++, j++)
-            {
-                //var rect = srcMatrix[i, j];
-                var rect = SrcCartMatrix[row, col];
-                //var vertices = rect.Vector2Array();
-                if (CGAlgorithm.CN_PnPoly(face.Center, rect.Vector2Array()) == 1)
-                {
-                    face.InitDimension(rect);
-                    //Panels[row, col] = panel;
-                    face.Row = row;
-                    face.Col = col;
-                    Faces.Add(face);
-                    return;
-                }
-            }
-        }
-
-        throw new System.Exception("NO SUCH RECTANGLE ");
-    }
-
 }
 
