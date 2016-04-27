@@ -178,68 +178,6 @@ public class Box
         }
     }
     
-        public void Draw2D(GameObject obj, Material mater)
-        {
-            foreach (var face in Faces)
-            {
-                if (!face.Object2D)
-                {
-                    face.Object2D = new GameObject(string.Format("[{0},{1}]", face.Row, face.Col));
-                    face.Object2D.transform.SetParent(obj.transform);
-                }
-
-                var face2D = face.Object2D.GetComponent<Mesh3DRenderer>();
-
-                if (face2D == null)
-                {
-                    face2D = face.Object2D.AddComponent<Mesh3DRenderer>();
-                    face2D.FaceType = Facing.FACE_BACK;
-                    face2D.IsTinkness = false;
-                    face2D.tinkness = 0.0F;
-                    face2D.GetComponent<MeshRenderer>().material = mater;
-                }
-
-                face2D.Clear();
-                face2D.OuterPolygon.Add(face.Bleedline);
-                face2D.UVRect = Boundry;
-                face2D.UpdateMesh();
-            }
-
-        }
-
-        public void Draw3D(GameObject obj, Material mater)
-        {
-            foreach (var face in Faces)
-            {
-                if (!face.Object3D)
-                {
-                    face.Object3D = new GameObject(string.Format("[{0},{1}]", face.Row, face.Col));
-
-                }
-
-                var face3D = face.Object3D.GetComponent<Mesh3DRenderer>();
-
-                if (face3D == null)
-                {
-                    face3D = face.Object3D.AddComponent<Mesh3DRenderer>();
-                    face3D.FaceType = Facing.FACE_BACK;
-                    face3D.IsTinkness = false;
-                    face3D.tinkness = 0.016F;
-                    face3D.GetComponent<MeshRenderer>().material = mater;
-                }
-
-                face3D.Clear();
-                face3D.OuterPolygon.Add(face.DestOutline);
-                face3D.UVRect = Boundry;
-                face3D.UpdateMesh();
-            }
-            
-
-            OnBindFaces(obj);
-
-            OnRotateFaces();
-        }
-
     public static CartesianMatrix<Rect> CalcCartMatrix(float length, float width, float depth)
     {
         CartesianMatrix<Rect> result = new CartesianMatrix<Rect>(5, 7);

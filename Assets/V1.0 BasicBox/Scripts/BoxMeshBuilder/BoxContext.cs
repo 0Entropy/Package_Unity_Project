@@ -6,35 +6,37 @@ using System.Collections.Generic;
 public class BoxContext : MonoBehaviour
 {
 
-    public TextAsset data;
+    public Material innerMat, outerMat, sideMat;
+
+    public Camera contentCamera;
+
     public Material mater;
     
     public GameObject box2D;
     public GameObject box3D;
     
-    Box mBox;
+    public Box mBox { set; get; }
     
-    void Start()
+    public void OnInit(string data)
     {
-
+        
 
         mBox = new Box();
-        var package = JsonFx.Json.JsonReader.Deserialize<PackageData>(data.text);
-        //var package = JsonUtility.FromJson<PackageData>(data.text);
+
+        OnClear();
+
+        var package = JsonFx.Json.JsonReader.Deserialize<PackageData>(data);
 
         mBox.OnInit(package);
 
-        inputL.text = mBox.Length.ToString();
-        inputW.text = mBox.Width.ToString();
-        inputD.text = mBox.Depth.ToString();
-
-        mBox.Draw3D(box3D, mater);
+        //Draw3D();
+        Draw3DWithMaterial();
+        Draw2D();
         
-        mBox.Draw2D(box2D, mater);
-
         box2D.transform.Rotate(Vector3.up, 180);
-    }
 
+        UpdateCamera();
+    }
 
     public void OnResize(float length, float width, float depth, float thickness = 0.01f)
     {
@@ -42,20 +44,32 @@ public class BoxContext : MonoBehaviour
         Length = length;
         Width = width;
         Depth = depth;
-
-        Debug.Log(string.Format("[{0}, {1}, {2}]", length, width, depth));
+        
         mBox.OnResize(length, width, depth, thickness);
 
-        /* Draw3D();
+        //Draw3D();
+        Draw3DWithMaterial();
+        Draw2D();
 
-         Draw2D();*/
-        mBox.Draw3D(box3D, mater);
+        //Debug.Log(mBox.Boundry + ", " + mBox.Boundry.center);
 
-        mBox.Draw2D(box2D, mater);
+        UpdateCamera();
 
     }
-    
-    #region 2D  
+
+    void UpdateCamera()
+    {
+        
+        if (!contentCamera.orthographic)
+            contentCamera.orthographic = true;
+        var size = Mathf.Max(mBox.Boundry.height, mBox.Boundry.width) * 0.5F;
+        contentCamera.orthographicSize =size;
+        var x = -mBox.Boundry.center.x + (size - mBox.Boundry.width * 0.5F);
+        var y = mBox.Boundry.center.y + (size - mBox.Boundry.height * 0.5F);
+        var z = contentCamera.transform.position.z;
+        contentCamera.transform.position = new Vector3(x, y, z);
+    }
+
 
     void Draw2D()
     {
@@ -72,9 +86,8 @@ public class BoxContext : MonoBehaviour
             if (face2D == null)
             {
                 face2D = face.Object2D.AddComponent<Mesh3DRenderer>();
-                face2D.FaceType = Facing.FACE_BACK;
-                face2D.IsTinkness = false;
-                face2D.tinkness = 0.0F;
+                face2D.FaceType = Facing.FACE_FORWARD;
+                face2D.thickness = 0.0F;
                 face2D.GetComponent<MeshRenderer>().material = mater;
             }
 
@@ -85,7 +98,7 @@ public class BoxContext : MonoBehaviour
         }
 
     }
-    #endregion
+
     void Draw3D()
     {
         foreach (var face in mBox.Faces)
@@ -102,8 +115,7 @@ public class BoxContext : MonoBehaviour
             {
                 face3D = face.Object3D.AddComponent<Mesh3DRenderer>();
                 face3D.FaceType = Facing.DOUBLE_FACE;
-                face3D.IsTinkness = true;
-                face3D.tinkness = 0.016F;
+                face3D.thickness = 0.016F;
                 face3D.GetComponent<MeshRenderer>().material = mater;
             }
 
@@ -114,44 +126,79 @@ public class BoxContext : MonoBehaviour
         }
         
         mBox.OnBindFaces(box3D);
-        
+
         mBox.OnRotateFaces();
     }
 
-    /*void BindByEdge(Face face)
+    void Draw3DWithMaterial()
     {
-        foreach (var f in face.Neighbors)
+        foreach (var face in mBox.Faces)
         {
-            var edge = f.FindEdgeByFace(face);
-            if (!edge.IsBinded)
+            if (!face.Object3D)
             {
-                f.Object3D.transform.SetParent(face.Object3D.transform);
-                edge.IsBinded = true;
-                BindByEdge(f);
+                face.Object3D = new GameObject(string.Format("[{0},{1}]", face.Row, face.Col));
+
             }
-        }
-    }*/
 
-    void RotateAroundEdge()
+            var face3D = face.Object3D.GetComponent<Box3DRenderer>();
+
+            if (face3D == null)
+            {
+                face3D = face.Object3D.AddComponent<Box3DRenderer>();
+                face3D.OnInit();
+                face3D.outerMat = outerMat;
+                face3D.innerMat = innerMat;
+                face3D.sideMat = sideMat;
+            }
+
+            face3D.Clear();
+            face3D.AddOuter(face.DestOutline);
+            face3D.SetBoundry(mBox.Boundry);
+            face3D.UpdateMesh();
+        }
+
+        mBox.OnBindFaces(box3D);
+
+        mBox.OnRotateFaces();
+    }
+
+    void OnClear()
     {
-        foreach (var f in mBox.Faces.FindAll(f => f.IsNext).Distinct())
-        {
-            //Debug.Log(face.mTransform.name);
-            var edge = f.Edges.Find(e => !e.IsRotated);
+        if (box2D.transform.childCount == 0 && box3D.transform.childCount == 0)
+            return;
 
-            var point = f.Translate(edge.Point);
+        GameObject temp3D = new GameObject(box2D.name);
+        GameObject temp2D = new GameObject(box3D.name);
+        temp2D.transform.CopyFrom(box2D);
+        temp3D.transform.CopyFrom(box3D);
+        GameObject.DestroyImmediate(box2D);
+        GameObject.DestroyImmediate(box3D);
 
-            f.Object3D.transform.RotateAround(point, edge.Axis, edge.Angle);
-            edge.IsRotated = true;
-            //RotateByEdge(f);
-        }
+        box2D = temp2D;
+        box3D = temp3D;
     }
 
     #region Unit Test
 
     float Length, Width, Depth;
-    // Use this for initialization
+
     public InputField inputL, inputW, inputD;
+
+    public TextAsset data;
+
+    void Start()
+    {
+        OnInit(data.text);
+        
+        inputL.text = mBox.Length.ToString();
+        inputW.text = mBox.Width.ToString();
+        inputD.text = mBox.Depth.ToString();
+    }
+
+    public void OnInit()
+    {
+        OnInit(data.text);
+    }
 
     public void OnRefresh()
     {

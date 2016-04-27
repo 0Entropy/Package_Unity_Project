@@ -7,6 +7,7 @@ using Geometry;
 [Flags]
 public enum Facing
 {
+    NULL = 0,
     DOUBLE_FACE = 3,
     FACE_BACK = 1,
     FACE_FORWARD = 2
@@ -20,10 +21,9 @@ public class Mesh3DRenderer : AbstractMeshRenderer
     public List<List<Vector2>> InnerHole { set; get; }
 
     public Facing FaceType = Facing.FACE_BACK;
-    public bool IsTinkness = false;
-
-
-    public float tinkness = 0.06f;
+    public bool IsTinkness { get { return thickness > 0; } }
+    
+    public float thickness = 0.06f;
 
     public Rect UVRect { set; get; }
 
@@ -51,10 +51,17 @@ public class Mesh3DRenderer : AbstractMeshRenderer
             var union = OuterPolygon[i];
             // var inner = CGAlgorithm.ScalePoly(union, -0.1F);
             var trian = ForceEarCut.ComputeTriangles(union);
+            if ((FaceType & Facing.FACE_FORWARD) == Facing.FACE_FORWARD)
+            {
+
+                CalcFaceMeshData(union, trian, Facing.FACE_FORWARD, thickness, ref vertices, ref normals, ref uv, ref triangles);
+            }
+
             if ((FaceType & Facing.FACE_BACK) == Facing.FACE_BACK)
-                CalcFaceMeshData(union, trian, Facing.FACE_FORWARD, tinkness, ref vertices, ref normals, ref uv, ref triangles);
-            if ((FaceType & Facing.FACE_BACK) == Facing.FACE_BACK)
-                CalcFaceMeshData(union, trian, Facing.FACE_BACK, tinkness, ref vertices, ref normals, ref uv, ref triangles);
+            {
+
+                CalcFaceMeshData(union, trian, Facing.FACE_BACK, thickness, ref vertices, ref normals, ref uv, ref triangles);
+            }
         }
 
         if (IsTinkness)
@@ -62,7 +69,7 @@ public class Mesh3DRenderer : AbstractMeshRenderer
             foreach (var outer in OuterPolygon)
             {
                 //outer.Reverse();
-                CalcSideMeshData(outer, tinkness, ref vertices, ref normals, ref uv, ref triangles);
+                CalcSideMeshData(outer, thickness, ref vertices, ref normals, ref uv, ref triangles);
             }
 
             /*foreach (var inner in InnerHole)
@@ -157,7 +164,11 @@ public class Mesh3DRenderer : AbstractMeshRenderer
             verts.Add((Vector3)pt + Vector3.forward * thick);
             normals.Add(normal);
             if(UVRect != null)
-            uvs.Add(new Vector2(( UVRect.xMax - pt.x) /UVRect.width, (pt.y - UVRect.yMin)/UVRect.width));
+            {
+                var max = Mathf.Max(UVRect.width, UVRect.height);
+                //Debug.Log("MAX : " + max);
+                uvs.Add(new Vector2((UVRect.xMax - pt.x) / max, (pt.y - UVRect.yMin) / max));
+            }
             //uvs.Add(new Vector2(pt.x / w, pt.y / h));
         }
 
