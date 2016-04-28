@@ -371,9 +371,11 @@ of a point in an arbitrary polygon.
 	    I0 = S1.P0 + sI * u;                // compute S1 intersect point
 	    return 1;
 	}
-	
-  //public static int Intersect2D_2Segments( Segment2D S1, Segment2D S2, Vector2 I0, Vector2 I1 ) {
-	public static int Intersect2D_2Segments( Vector2 P0, Vector2 P1, Vector2 P2, Vector2 P3, out Vector2 I0, out Vector2 I1 ) {
+
+    #region NICE
+    //-------------------------------------------------------------------------------------------------------------------------//
+    //public static int Intersect2D_2Segments( Segment2D S1, Segment2D S2, Vector2 I0, Vector2 I1 ) {
+    public static int Intersect2D_2Segments( Vector2 P0, Vector2 P1, Vector2 P2, Vector2 P3, out Vector2 I0, out Vector2 I1 ) {
         I0 = P1;
         I1 = P2;
         Vector2   u = P1 - P0;
@@ -455,52 +457,75 @@ of a point in an arbitrary polygon.
 	    return 1;
 	}
 
-	/// <summary>
-	/// Get Intersects factor --- (u, v, inbound).
-	/// </summary>
-	/// <returns>The factor.</returns>
-	/// <param name="P0">P0.</param>
-	/// <param name="P1">P1.</param>
-	/// <param name="P2">P2.</param>
-	/// <param name="P3">P3.</param>
-	/// <param name="Factor">Factor.</param>
-	public static int IntersectFactor(Vector2 P0, Vector2 P1, Vector2 P2, Vector2 P3, out InterFactor Factor){
+    /// <summary>
+    /// Get Intersects factor --- (u, v, inbound).
+    /// </summary>
+    /// <returns>The factor.</returns>
+    /// <param name="P0">P0.</param>
+    /// <param name="P1">P1.</param>
+    /// <param name="P2">P2.</param>
+    /// <param name="P3">P3.</param>
+    /// <param name="Factor">Factor.</param>
+    public static int IntersectFactor(Vector2 P0, Vector2 P1, Vector2 P2, Vector2 P3, out InterFactor Factor)
+    {
 
-		Factor = InterFactor.none;
+        Factor = InterFactor.none;
 
-		Vector2   u = P1 - P0;
-		Vector2   v = P3 - P2;
-		Vector2   w = P0 - P2;
-		float     D = Perp(u,v);
+        Vector2 I0 = P1;
+        Vector2 I1 = P2;
 
-		// test if  they are parallel (includes either being a point)
-		if (Mathf.Abs(D) > SMALL_NUM) {
+        Vector2 u = P1 - P0;
+        Vector2 v = P3 - P2;
+        Vector2 w = P0 - P2;
 
-			// the segments are skew and may intersect in a point
-			// get the intersect parameter for P01
-			float     sI = Perp(v,w) / D;
-			if (sI < 0 || sI > 1)                // no intersect with S1
-				return 0;
-			
-			// get the intersect parameter for P23
-			float     tI = Perp(u,w) / D;
-			if (tI < 0 || tI > 1)                // no intersect with S2
-				return 0;
-			
-			//I0 = P0 + sI * u;                // compute S1 intersect point
-			Vector2 w2 = P1 - P2;				//因为Perp(w,v)有可能等于0，所以求P2是否在P2P3另一侧。
-			Factor = new InterFactor(){t = sI, u = tI, inbound = ((Perp(w,v) < 0) || (Perp(w2,v) > 0)) };
+        Vector2 w2 = P1 - P2;
 
-			return 1;
+        float D = Perp(u, v);
 
-		}//if (Mathf.Abs(D) > SMALL_NUM) {...
+        /*if (Mathf.Abs(D) < SMALL_NUM)
+        {
+            Debug.Log("THOSE SEGMENTS are parallel (includes either being a point)!!!");
+        }*/
+            
 
-		return 0;
-	}
-	
-	// These 2 segments are skew and may intersect in one point.
-	// just delete the part of --- if (Mathf.Abs(D) < SMALL_NUM) {...} 
-	public static bool Intersect2D_2SkewSegments( Vector2 P0, Vector2 P1, Vector2 P2, Vector2 P3, 
+            if (Mathf.Abs(D) > SMALL_NUM)
+        {
+
+            // the segments are skew and may intersect in a point
+            // get the intersect parameter for P01
+            float sI = Perp(v, w) / D;
+            if (sI < 0 || sI > 1)                // no intersect with S1
+                return 0;
+
+            // get the intersect parameter for P23
+            float tI = Perp(u, w) / D;
+            if (tI < 0 || tI > 1)                // no intersect with S2
+                return 0;
+
+            //I0 = P0 + sI * u;                // compute S1 intersect point
+            //Vector2 w2 = P1 - P2;               //因为Perp(w,v)有可能等于0，所以求P2是否在P2P3另一侧。
+            Factor = new InterFactor() { t = sI, u = tI, inbound = ((Perp(w, v) < 0) || (Perp(w2, v) > 0)) };
+
+            return 1;
+        }
+
+        //if (Mathf.Abs(D) < SMALL_NUM)
+        //{      // S1 and S2 are parallel
+            
+
+        return 0;// 2;
+
+                 //}
+        //return 0;
+    }
+
+    //-------------------------------------------------------------------------------------------------------------------------//
+    #endregion
+
+
+    // These 2 segments are skew and may intersect in one point.
+    // just delete the part of --- if (Mathf.Abs(D) < SMALL_NUM) {...} 
+    public static bool Intersect2D_2SkewSegments( Vector2 P0, Vector2 P1, Vector2 P2, Vector2 P3, 
 		int IndexOfP2, int IndexofP3, ref Intersection Inter ) {
 //		Inter = new Intersection();
 //		I0 = Vector2.zero;
@@ -1105,40 +1130,71 @@ of a point in an arbitrary polygon.
 	}
 	
 	public static void TranslateSegment( ref Vector2 P0, ref Vector2 P1, float Spacing) {
-		//static function OrthoNormalize(normal: Vector3, tangent: Vector3, binormal: Vector3): void;
-		Vector3 nromal = Vector3.back;//or forward
+        //static function OrthoNormalize(normal: Vector3, tangent: Vector3, binormal: Vector3): void;
+        /*Vector3 nromal = Vector3.back;//or forward
 		Vector3 tangent = P1 - P0;
 		Vector3 binormal = Vector3.zero;
 		Vector3.OrthoNormalize(ref nromal, ref tangent, ref binormal);
+        
 //		Vector2.
 		Vector2 space = binormal * Spacing;
 		P0 += space;
-		P1 += space;
+		P1 += space;*/
+        var dir =( P1 - P0).normalized;
+        var space = new Vector2(dir.y, -dir.x) * Spacing;
+        P0 += space;
+        P1 += space;
 		
 	}
 	
 	public static List<Vector2> ScalePoly(List<Vector2> Poly, float Spacing){
 		
 		int n = Poly.Count;
-		
+
+        if (ForceEarCut.AreVerticesClockwise(Poly, 0, n))
+            Poly.Reverse();
+
+        /*for(int i= n-1; i>0; i--)
+        {
+            var next = Poly[i - 1];
+            var current = Poly[i];
+
+            if(Vector2.Distance(next, current) < 0.0125F)
+            {
+                Poly.RemoveAt(i);
+            }
+           
+        }*/
+
 		List<Vector2> scaledPoly = new List<Vector2>();
 		
 		Vector2 P0, P1, P2, P3;
-		Vector2 skewPoint = Vector2.zero;
+		//Vector2 skewPoint = Vector2.zero;
 
         Vector2 I0, I1;
-		
-		for(int i = 0; i < n; i++) {
+       // n = Poly.Count;
+        for (int i = 0; i < n; i++) {
+
+           
+
+            //var P = Poly[i];
 			P0 = Poly[PreIndex(i, n)];
-			P1 = P2 = Poly[i];
-			P3 = Poly[NextIndex(i, n)];
-			TranslateSegment(ref P0, ref P1, Spacing);
+			P1 = Poly[i];
+
+
+
+            P2 = Poly[i];
+            P3 = Poly[NextIndex(i, n)];
+            
+            TranslateSegment(ref P0, ref P1, Spacing);
 			TranslateSegment(ref P2, ref P3, Spacing);
 			if(Intersect2D_2Segments(P0, P1, P2, P3, out I0, out I1) > 0){
 				scaledPoly.Add(I0);
 			}else{
-				scaledPoly.Add(P1);
-				scaledPoly.Add(P2);
+
+                scaledPoly.Add(P1);
+                scaledPoly.Add(P2);
+				
 			}
 		}
 		

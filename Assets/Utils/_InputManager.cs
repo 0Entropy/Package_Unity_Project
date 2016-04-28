@@ -79,14 +79,16 @@ public class _InputManager : _Singleton<_InputManager>
 //	public static event OnMultiEndEvent OnMultiEnd;
 	
 	public Camera RaycastCamera;
+    public LayerMask selectableLayer;
 
-	public Vector3 mousePosition;
+    public Vector3 mousePosition;
 	public Vector3 clickPosition;
 	public GameObject SelectedObject;// {private set; get;}
 
 	//public Vector3 hitPoint{private set; get;}
 
 	int selectable_layer_mask;//, ui_layer_mask;
+    
 	
 	//private Rect checkAreaRect = new Rect();
 	//for 240 dpi display, a touch almost is 3/8 inch, so it is about 90 Pixels dimension...
@@ -129,7 +131,7 @@ public class _InputManager : _Singleton<_InputManager>
         //		IsTouchEnable = true;
         Input_Y_Area_Factor =  new Vector2(0.0f, 1.0f);//Vector2.zero;//
         screenCenter = new Vector2(Screen.width * 0.5F, - Screen.height* 0.5F);
-		selectable_layer_mask = (1 << LayerMask.NameToLayer ("Selectable"));// | (1 << LayerMask.NameToLayer ("Skeleton Layer"));
+		selectable_layer_mask = ( LayerMask.NameToLayer ("Test Layer"));// | (1 << LayerMask.NameToLayer ("Skeleton Layer"));
 		//TODO
 	}
 
@@ -151,7 +153,7 @@ public class _InputManager : _Singleton<_InputManager>
 	#if(((UNITY_ANDROID||UNITY_IPHONE)&&!UNITY_EDITOR))
 		UndateTouch();
 	#else
-		//UpdateMouse();
+		UpdateMouse();
 	#endif
 
 		if (Input.GetKeyDown (KeyCode.Escape)) {
@@ -296,16 +298,16 @@ public class _InputManager : _Singleton<_InputManager>
 
 	void UpdateMouse(){
         
-		if(IsOut)
-			return;
+		/*if(IsOut)
+			return;*/
 
         Vector3 worldPosition = RaycastCamera.ScreenToWorldPoint(Input.mousePosition);
 
         if (Input.GetMouseButtonDown(0))
 		{
-
             SelectedObject = DownObj = OnTouch(Input.mousePosition);
-			UpObj = null;
+            //Debug.Log("Hit Object : " +( (SelectedObject != null )? SelectedObject.name : "null"));
+            UpObj = null;
 
             if (OnClick != null && DownObj == null && UpObj == null && SelectedObject == null)
             {
@@ -345,7 +347,7 @@ public class _InputManager : _Singleton<_InputManager>
 			}else{
 				if(Input.GetKey(KeyCode.LeftAlt) && isMultiTouchStart){
 					float x = Input.mousePosition.x;
-					float y = Input.mousePosition.y;
+//					float y = Input.mousePosition.y;
 //					float currectDistance = Vector2.Distance(new Vector2(x,y), new Vector2(Screen.width - x, Screen.height - y));
 					Vector2 originDir = (Vector2)mousePosition - screenCenter;
 					Vector2 delta = mousePosition - clickPosition;
@@ -368,7 +370,8 @@ public class _InputManager : _Singleton<_InputManager>
 		}
 
 		if (Input.GetMouseButtonUp (0)) {
-			if(OnRelease != null)
+            //Debug.Log("Mouse Up");
+            if (OnRelease != null)
 				OnRelease();
 
 			if(isDragStart && SelectedObject && OnDragEnd != null){
@@ -396,9 +399,9 @@ public class _InputManager : _Singleton<_InputManager>
 	}
 
 	GameObject OnTouch(Vector3 pos){
-		Ray ray = RaycastCamera.ScreenPointToRay(pos);
+        Ray ray = RaycastCamera.ScreenPointToRay(pos);
 		RaycastHit hit;
-		if (Physics.Raycast(ray, out hit, 20.0f, selectable_layer_mask))
+		if (Physics.Raycast(ray, out hit, Mathf.Infinity, selectableLayer))
         {
             return hit.transform.gameObject;
 //			if(OnFocus != null && FocusedObject)

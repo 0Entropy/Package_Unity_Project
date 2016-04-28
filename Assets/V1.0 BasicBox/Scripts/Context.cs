@@ -2,9 +2,7 @@
 using System.Collections;
 
 public class Context {
-
-    Package2D mPackage;
-
+    
 	public Context()
     {
 

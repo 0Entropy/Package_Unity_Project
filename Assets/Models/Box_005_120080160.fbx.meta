@@ -1,0 +1,148 @@
+fileFormatVersion: 2
+guid: 9e57cfc12086a064eb6c37ced8d82056
+timeCreated: 1461812818
+licenseType: Pro
+ModelImporter:
+  serializedVersion: 19
+  fileIDToRecycleName:
+    100000: Box_005_01
+    100002: Box_005_02
+    100004: Box_005_03
+    100006: Box_005_04
+    100008: Box_005_05
+    100010: Box_005_06
+    100012: Box_005_07
+    100014: Box_005_08
+    100016: Box_005_09
+    100018: Box_005_10
+    100020: Box_005_11
+    100022: Box_005_12
+    100024: //RootNode
+    100026: Box_005_13
+    100028: Box_005_14
+    100030: Box_005_15
+    400000: Box_005_01
+    400002: Box_005_02
+    400004: Box_005_03
+    400006: Box_005_04
+    400008: Box_005_05
+    400010: Box_005_06
+    400012: Box_005_07
+    400014: Box_005_08
+    400016: Box_005_09
+    400018: Box_005_10
+    400020: Box_005_11
+    400022: Box_005_12
+    400024: //RootNode
+    400026: Box_005_13
+    400028: Box_005_14
+    400030: Box_005_15
+    2300000: Box_005_01
+    2300002: Box_005_02
+    2300004: Box_005_03
+    2300006: Box_005_04
+    2300008: Box_005_05
+    2300010: Box_005_06
+    2300012: Box_005_07
+    2300014: Box_005_08
+    2300016: Box_005_09
+    2300018: Box_005_10
+    2300020: Box_005_11
+    2300022: Box_005_12
+    2300024: Box_005_13
+    2300026: Box_005_14
+    2300028: Box_005_15
+    3300000: Box_005_01
+    3300002: Box_005_02
+    3300004: Box_005_03
+    3300006: Box_005_04
+    3300008: Box_005_05
+    3300010: Box_005_06
+    3300012: Box_005_07
+    3300014: Box_005_08
+    3300016: Box_005_09
+    3300018: Box_005_10
+    3300020: Box_005_11
+    3300022: Box_005_12
+    3300024: Box_005_13
+    3300026: Box_005_14
+    3300028: Box_005_15
+    4300000: Box_005_01
+    4300002: Box_005_02
+    4300004: Box_005_03
+    4300006: Box_005_04
+    4300008: Box_005_05
+    4300010: Box_005_06
+    4300012: Box_005_07
+    4300014: Box_005_08
+    4300016: Box_005_09
+    4300018: Box_005_10
+    4300020: Box_005_11
+    4300022: Box_005_12
+    4300024: Box_005_13
+    4300026: Box_005_14
+    4300028: Box_005_15
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleRotations: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

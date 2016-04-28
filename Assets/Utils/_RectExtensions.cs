@@ -2,7 +2,8 @@
 using System.Linq;
 using System.Collections.Generic;
 
-public static class _RectExtensions {
+public static class _RectExtensions
+{
     public static Vector2[] Vector2Array(this Rect rect)
     {
         return new Vector2[]{
@@ -21,6 +22,16 @@ public static class _RectExtensions {
                     new Vector2(rect.xMax, rect.yMax),
                     new Vector2(rect.xMax,  rect.yMin)
             };
+    }
+
+    public static List<Vector2> Vector2List(this Rect rect)
+    {
+        return new List<Vector2>(rect.Vector2Array());
+    }
+
+    public static List<Vector3> Vector3List(this Rect rect)
+    {
+        return new List<Vector3>(rect.Vector3Array());
     }
 
     public static Rect BorderRect(this List<Vector2> vertices)

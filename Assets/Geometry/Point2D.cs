@@ -137,7 +137,7 @@
             }*/
 
             return Position == other.Position;
-            
+            //return Vector3.Distance(Position, other.Position) < 0.0001F;
         }
 
         public override int GetHashCode()

@@ -48,13 +48,46 @@ public class PolygonAlgorithm{
 
         return merge;
     }
-    
-	public static bool Operate(List<Vector2> subjPoly, List<Vector2> operPoly, out List<Vector2> result, OPERATION operation = OPERATION.OR)
-    {
 
+    public static bool Merge(List<List<Vector2>> allPolys, out List<Vector2> merge)
+    {
+         merge = allPolys[0];
+        allPolys.RemoveAt(0);
+
+        int maxCount = 100;
+
+        while (allPolys.Count > 0)
+        {
+
+            var removableList = new List<List<Vector2>>();
+
+            foreach (var currect in allPolys)
+            {
+                List<Vector2> result;
+                if (Operate(merge, currect, out result, OPERATION.OR))
+                {
+                    merge = result;
+                    removableList.Add(currect);
+                }
+            }
+
+            foreach (var r in removableList)
+                allPolys.Remove(r);
+
+            if (--maxCount < 0)
+                return false;
+        }
+
+        return true;
+    }
+
+
+    public static bool Operate(List<Vector2> subjPoly, List<Vector2> operPoly, out List<Vector2> result, OPERATION operation = OPERATION.OR)
+    {
+        
         result = new List<Vector2>();
 
-		int sn = subjPoly.Count;
+        int sn = subjPoly.Count;
 		int on = operPoly.Count;
 		
 		if(!ForceEarCut.AreVerticesClockwise(subjPoly, 0, sn)){
@@ -239,7 +272,7 @@ public class PolygonAlgorithm{
 		inTemp.Reverse ();
 		
 		int inCount = inTemp.Count;
-		int exCount = exRing.Count;
+		//int exCount = exRing.Count;
 		
 		int inIndex = inTemp.IndexOf(inVertex);
 		int exIndex = exRing.IndexOf(exVertex);
